@@ -1,0 +1,9 @@
+streamlit==1.25.0
+tensorflow==2.15.0  # Use a specific version compatible with your model
+Pillow<10
+numpy<1.23
+pandas
+matplotlib
+seaborn
+scikit-learn  # If you're using it
+opencv-python  # If you're using it
