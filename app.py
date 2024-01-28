@@ -1,8 +1,10 @@
 import streamlit as st
-import tensorflow as tf
 from PIL import Image
 import numpy as np
 
+import tensorflow as tf
+print(tf.__version__)
+ 
 # Class names in CIFAR-10
 class_names = ["airplane", "automobile", "bird", "cat", "deer", 
                "dog", "frog", "horse", "ship", "truck"]
