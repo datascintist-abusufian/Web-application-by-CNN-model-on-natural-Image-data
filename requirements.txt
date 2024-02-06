@@ -1,11 +1,11 @@
-streamlit==1.25.0
-tensorflow==2.15.0
-Pillow<10
-numpy==1.21.5  # Adjusted to ensure compatibility with scipy, numba, and other dependencies
-pandas
-matplotlib
-seaborn
-scikit-learn
-opencv-python
-scipy  # Consider specifying a version if needed for compatibility
-numba  # Consider specifying a version if needed for compatibility
+streamlit==1.31.0  # Updated from 1.25.0 based on recent successful installations
+tensorflow==2.15.0  # Kept as specified
+Pillow<10  # Kept as specified, compatible with your successful installations
+numpy==1.22.3  # Adjusted for compatibility based on your environment setup; consider using 1.21.5 if specific issues arise
+pandas==2.2.0  # Updated to reflect a version compatible with the rest of your environment
+matplotlib  # Kept without version, ensuring latest compatible version is used
+seaborn  # Kept without version, ensuring latest compatible version is used
+scikit-learn  # Kept without version, ensuring latest compatible version is used
+opencv-python  # Kept without version, ensuring latest compatible version is used
+scipy==1.8.0  # Specifying a version for compatibility, adjust as necessary based on your project's requirements
+numba==0.55.1  # Specifying a version for compatibility with numpy, adjust as necessary
