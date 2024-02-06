@@ -2,6 +2,8 @@ import streamlit as st
 from PIL import Image
 import numpy as np
 import tensorflow as tf
+import requests
+import os
 
 # Assuming TensorFlow is already installed and you've checked its version
 # print(tf.__version__)
@@ -11,18 +13,34 @@ class_names = ["airplane", "automobile", "bird", "cat", "deer",
                "dog", "frog", "horse", "ship", "truck"]
 
 @st.cache(allow_output_mutation=True)
+def download_model(url, model_name):
+    """
+    Download the model from a given URL if it's not already in the cache.
+    """
+    if not os.path.isfile(model_name):
+        # Streamlit shows a message while downloading
+        # and caching the model
+        with st.spinner(f'Downloading {model_name}...'):
+            r = requests.get(url)
+            with open(model_name, 'wb') as f:
+                f.write(r.content)
+    return model_name
+
+@st.cache(allow_output_mutation=True)
 def load_model():
-    # Ensure the model path is correct and the model is properly saved
-    return tf.keras.models.load_model('cifar10_cnn.h5')
+    # Model URL on GitHub
+    model_url = 'https://github.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/blob/main/cifar10_cnn.h5?raw=true'
+    model_path = download_model(model_url, 'cifar10_cnn.h5')
+    return tf.keras.models.load_model(model_path)
 
 model = load_model()
 st.title("CIFAR-10 Image Classifier")
 
-# File uploader widget
-uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "png"])
+# Sidebar for image upload
+uploaded_file = st.sidebar.file_uploader("Choose an image...", type=["jpg", "png", "jpeg"])
 
 if uploaded_file is not None:
-    # Display the uploaded image
+    # Display the uploaded image in the main page
     image = Image.open(uploaded_file).resize((32, 32))
     st.image(image, caption='Uploaded Image', use_column_width=True)
     
@@ -30,17 +48,23 @@ if uploaded_file is not None:
     image = np.array(image) / 255.0  # Normalize the image
     image = image[np.newaxis, ...]  # Add a batch dimension
 
-    # User selection for class
-    user_selected_class = st.selectbox("What do you think this image is?", class_names)
-    st.write(f"You selected: {user_selected_class}")
+    # Prediction Button
+    if st.sidebar.button('Predict Image Class'):
+        prediction = model.predict(image)
+        predicted_class = class_names[np.argmax(prediction)]
+        st.sidebar.write(f"Model Prediction: {predicted_class}")
 
-    # Model prediction
+# Class selection box in the main page
+class_selection = st.selectbox("Select a class to filter predictions:", class_names)
+
+# Display the prediction result if a class is selected and an image is uploaded
+if uploaded_file is not None:
+    st.write(f"You selected: {class_selection}")
     prediction = model.predict(image)
     predicted_class = class_names[np.argmax(prediction)]
-    st.write(f"Model Prediction: {predicted_class}")
-
-    # Compare the prediction with user selection
-    if user_selected_class == predicted_class:
-        st.success("The model's prediction matches your selection!")
+    
+    # Check if the selected class matches the predicted class
+    if class_selection == predicted_class:
+        st.success(f"The model's prediction matches your selection: {predicted_class}!")
     else:
-        st.error("The model's prediction does not match your selection.")
+        st.error(f"The model's prediction does not match your selection. Predicted: {predicted_class}")
