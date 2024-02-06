@@ -9,3 +9,7 @@ scikit-learn
 opencv-python
 scipy
 numba
+requests
+joblib
+black  # Optional, for code formatting
+flake8  # Optional, for linting
