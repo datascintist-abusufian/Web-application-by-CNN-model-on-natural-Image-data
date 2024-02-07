@@ -18,7 +18,7 @@ st.image("Real_DL_architect.gif", use_column_width=True)
 st.title("3D Natural Image Classification App")
 st.write("This app demonstrates Image classification into different classes using web application.")
 st.markdown("<span style='color:blue'>Author Md Abu Sufian</span>", unsafe_allow_html=True)
-st.write( " Visualisation of Design and Coding Under Construction")
+st.write( " ......Visualisation of Design and Coding Under Construction.........")
   
 @st.cache(allow_output_mutation=True)
 def download_model(url, model_name):
