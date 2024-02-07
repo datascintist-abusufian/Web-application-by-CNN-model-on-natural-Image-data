@@ -12,7 +12,6 @@ import os
 class_names = ["airplane", "automobile", "bird", "cat", "deer", 
                "dog", "frog", "horse", "ship", "truck"]
 
-# Display the GIF, Title, and Description...
 st.image("Real_DL_architect.gif", use_column_width=True)
 
 @st.cache(allow_output_mutation=True)
@@ -41,25 +40,23 @@ uploaded_file = st.sidebar.file_uploader("Choose an image...", type=["jpg", "png
 if uploaded_file is not None:
     image = Image.open(uploaded_file).resize((32, 32))
     st.image(image, caption='Uploaded Image', use_column_width=True)
-    image = np.array(image) / 255.0  # Normalize the image
-    image = image[np.newaxis, ...]  # Add a batch dimension
+    image_array = np.array(image) / 255.0  # Normalize the image
+    image_array = image_array[np.newaxis, ...]  # Add a batch dimension
 
-    if st.sidebar.button('Predict Image Class'):
-        prediction = model.predict(image)
-        predicted_class = class_names[np.argmax(prediction)]
-        confidence = np.max(prediction)  # Get the highest probability value
-        st.sidebar.write(f"Model Prediction: {predicted_class}")
-        st.sidebar.write(f"Confidence: {confidence:.2f}")
+    predictions = model.predict(image_array)
+    predicted_class = class_names[np.argmax(predictions)]
+    confidence = np.max(predictions)  # Get the highest probability value
+    
+    # Display the prediction and confidence on the main page
+    st.write(f"Model Prediction: {predicted_class}")
+    st.write(f"Confidence: {confidence:.2%}")  # Display as a percentage
 
+# Allow the user to select a class to filter predictions
 class_selection = st.selectbox("Select a class to filter predictions:", class_names)
 
 if uploaded_file is not None and class_selection:
     st.write(f"You selected: {class_selection}")
-    prediction = model.predict(image)
-    predicted_class = class_names[np.argmax(prediction)]
-    confidence = np.max(prediction)  # Get the highest probability value
-    
     if class_selection == predicted_class:
-        st.success(f"The model's prediction matches your selection: {predicted_class} with confidence {confidence:.2f}")
+        st.success(f"The model's prediction matches your selection: {predicted_class} with confidence {confidence:.2%}")
     else:
-        st.error(f"The model's prediction does not match your selection. Predicted: {predicted_class} with confidence {confidence:.2f}")
+        st.error(f"The model's prediction does not match your selection. Predicted: {predicted_class} with confidence {confidence:.2%}")
