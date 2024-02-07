@@ -18,8 +18,6 @@ def download_model(url, model_name):
     Download the model from a given URL if it's not already in the cache.
     """
     if not os.path.isfile(model_name):
-        # Streamlit shows a message while downloading
-        # and caching the model
         with st.spinner(f'Downloading {model_name}...'):
             r = requests.get(url)
             with open(model_name, 'wb') as f:
@@ -28,7 +26,6 @@ def download_model(url, model_name):
 
 @st.cache(allow_output_mutation=True)
 def load_model():
-    # Model URL on GitHub
     model_url = 'https://github.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/blob/main/cifar10_cnn.h5?raw=true'
     model_path = download_model(model_url, 'cifar10_cnn.h5')
     return tf.keras.models.load_model(model_path)
@@ -36,35 +33,30 @@ def load_model():
 model = load_model()
 st.title("CIFAR-10 Image Classifier")
 
-# Sidebar for image upload
 uploaded_file = st.sidebar.file_uploader("Choose an image...", type=["jpg", "png", "jpeg"])
 
 if uploaded_file is not None:
-    # Display the uploaded image in the main page
     image = Image.open(uploaded_file).resize((32, 32))
     st.image(image, caption='Uploaded Image', use_column_width=True)
-    
-    # Preprocess the image
     image = np.array(image) / 255.0  # Normalize the image
     image = image[np.newaxis, ...]  # Add a batch dimension
 
-    # Prediction Button
     if st.sidebar.button('Predict Image Class'):
         prediction = model.predict(image)
         predicted_class = class_names[np.argmax(prediction)]
+        confidence = np.max(prediction)  # Get the highest probability value
         st.sidebar.write(f"Model Prediction: {predicted_class}")
+        st.sidebar.write(f"Confidence: {confidence:.2f}")
 
-# Class selection box in the main page
 class_selection = st.selectbox("Select a class to filter predictions:", class_names)
 
-# Display the prediction result if a class is selected and an image is uploaded
-if uploaded_file is not None:
+if uploaded_file is not None and class_selection:
     st.write(f"You selected: {class_selection}")
     prediction = model.predict(image)
     predicted_class = class_names[np.argmax(prediction)]
+    confidence = np.max(prediction)  # Get the highest probability value
     
-    # Check if the selected class matches the predicted class
     if class_selection == predicted_class:
-        st.success(f"The model's prediction matches your selection: {predicted_class}!")
+        st.success(f"The model's prediction matches your selection: {predicted_class} with confidence {confidence:.2f}")
     else:
-        st.error(f"The model's prediction does not match your selection. Predicted: {predicted_class}")
+        st.error(f"The model's prediction does not match your selection. Predicted: {predicted_class} with confidence {confidence:.2f}")
