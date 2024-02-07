@@ -12,6 +12,9 @@ import os
 class_names = ["airplane", "automobile", "bird", "cat", "deer", 
                "dog", "frog", "horse", "ship", "truck"]
 
+# Display the GIF, Title, and Description...
+st.image("Real_DL_architect.gif", use_column_width=True)
+
 @st.cache(allow_output_mutation=True)
 def download_model(url, model_name):
     """
