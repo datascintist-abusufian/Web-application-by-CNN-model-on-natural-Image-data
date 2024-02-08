@@ -88,7 +88,7 @@ if class_selection:
     st.image(example_image_path, caption=f"{class_selection.capitalize()} Example", use_column_width=True)
     st.write(f"Prediction Confidence: {confidence:.2%}")  # Display as a percentage
 
-  if uploaded_file is not None:
+if uploaded_file is not None:
         if class_selection == predicted_class:
             st.success(f"The model's prediction matches your selection: {predicted_class} with confidence {confidence:.2%}")
         else:
