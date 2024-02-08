@@ -67,5 +67,5 @@ if class_selection:
     example_predictions = model.predict(example_image_array)
     example_predicted_class = class_names[np.argmax(example_predictions)]
     example_confidence = np.max(example_predictions)
-    st.write(f"Example Image Class Prediction: {example_predicted_class}")
+    st.write(f"Image Class Prediction: {example_predicted_class}")
     st.write(f"Prediction Confidence: {example_confidence:.2%}")
