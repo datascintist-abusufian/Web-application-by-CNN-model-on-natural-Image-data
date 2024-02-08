@@ -85,6 +85,7 @@ class_selection = st.selectbox("Select a class to see an example image and predi
 
 # Check if a class has been selected
 # Display the example image and prediction for the selected class
+
     if class_selection:
         # Get the path to the example image
         example_image_path = get_example_image_path(class_selection.lower())
