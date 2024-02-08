@@ -78,7 +78,6 @@ def app():
     
     st.write(f"Model Prediction: {predicted_class}")
     st.write(f"Confidence: {confidence:.2%}")  # Display as a percentage
-
 if class_selection:
     example_image_path = get_example_image_path(class_selection.lower())
     st.write(f"Example image for class: {class_selection}")
