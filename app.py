@@ -57,7 +57,18 @@ if uploaded_file is not None:
     # Display uploaded image
     image = Image.open(uploaded_file).resize((32, 32))
     st.image(image, caption='Uploaded Image', use_column_width=True)
-    
+
+  # Main app logic
+def app():
+    st.title("CIFAR-10 Image Classifier")
+    model = load_model()  # Load your pre-trained model
+  
+# Dropdown for class selection
+    class_selection = st.selectbox("Select a class to see an example image and prediction:", class_names)
+
+# Make a prediction on the example image
+        example_image = example_image.resize((32, 32))  # Resize to match model expected input
+
     # Predict and display the result
     image_array = np.array(image) / 255.0  # Normalize the image
     image_array = image_array[np.newaxis, ...]  # Add a batch dimension
@@ -68,14 +79,14 @@ if uploaded_file is not None:
     st.write(f"Model Prediction: {predicted_class}")
     st.write(f"Confidence: {confidence:.2%}")  # Display as a percentage
 
-# Dropdown for class selection
-class_selection = st.selectbox("Select a class to see an example image:", class_names)
-
 # Display example image for the selected class
 if class_selection:
     example_image_path = get_example_image_path(class_selection.lower())
     st.write(f"Example image for class: {class_selection}")
+    st.write(f"Example Image Prediction: {predicted_class}")
+    example_image = Image.open(example_image_path)
     st.image(example_image_path, caption=f"{class_selection.capitalize()} Example", use_column_width=True)
+    st.write(f"Prediction Confidence: {confidence:.2%}")  # Display as a percentage
 
     if uploaded_file is not None:
         if class_selection == predicted_class:
