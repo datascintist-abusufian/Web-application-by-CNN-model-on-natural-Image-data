@@ -52,7 +52,7 @@ if uploaded_file is not None:
     st.write(f"Confidence: {confidence:.2%}")
 
 # Class selection and example image display
-class_selection = st.selectbox("Or select a class to view an example:", class_names)
+class_selection = st.selectbox("Upload Or select a class to get prediction accuracy:", class_names)
 if class_selection:
     example_image_path = get_example_image_path(class_selection.lower())
     example_image = Image.open(requests.get(example_image_path, stream=True).raw)
