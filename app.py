@@ -86,25 +86,20 @@ class_selection = st.selectbox("Select a class to see an example image and predi
 # Check if a class has been selected
 # Display the example image and prediction for the selected class
 
-if class_selection:
-        # Get the path to the example image
-        example_image_path = get_example_image_path(class_selection.lower())
-        
-        # Display the name of the selected class and example image
-        st.write(f"Example image for class: {class_selection}")
-        
-        # Load and display the example image
-        example_image = Image.open(requests.get(example_image_path, stream=True).raw)
-        st.image(example_image, caption=f"{class_selection.capitalize()} Example", use_column_width=True)
-        
-        # Resize the image to the size your model expects, preprocess it, and make a prediction
-        example_image_resized = example_image.resize((32, 32))  # Assuming the model expects 32x32 images
-        image_array = np.array(example_image_resized) / 255.0  # Normalize the image
-        image_array = image_array[np.newaxis, ...]  # Add a batch dimension
-        predictions = model.predict(image_array)
-        predicted_class = class_names[np.argmax(predictions)]
-        confidence = np.max(predictions)
+if uploaded_file is not None:
+    image = Image.open(uploaded_file).resize((32, 32))
+    st.image(image, caption='Uploaded Image', use_column_width=True)
+    image_array = np.array(image) / 255.0  # Normalize the image
+    image_array = image_array[np.newaxis, ...]  # Add a batch dimension
 
+    predictions = model.predict(image_array)
+    predicted_class = class_names[np.argmax(predictions)]
+    confidence = np.max(predictions)  # Get the highest probability value
+    
+    # Display the prediction and confidence on the main page
+    st.write(f"Model Prediction: {predicted_class}")
+    st.write(f"Confidence: {confidence:.2%}")  # Display as a percentage
+  
         # Display the prediction and confidence
         st.write(f"Example Image Prediction: {predicted_class}")
         st.write(f"Prediction Confidence: {confidence:.2%}")  # Display as a percentage
