@@ -80,7 +80,7 @@ def app():
     st.write(f"Confidence: {confidence:.2%}")  # Display as a percentage
 
 # Display example image for the selected class
-  if class_selection:
+if class_selection:
         example_image_path = get_example_image_path(class_selection.lower())
         st.write(f"Example image for class: {class_selection}")
         st.write(f"Example Image Prediction: {predicted_class}")
