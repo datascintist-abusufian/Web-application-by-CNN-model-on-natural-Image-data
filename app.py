@@ -10,7 +10,7 @@ class_names = ["airplane", "automobile", "bird", "cat", "deer",
                "dog", "frog", "horse", "ship", "truck"]
 
 # Base URL for example images
-BASE_IMAGE_URL = "https://github.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/tree/main"
+BASE_IMAGE_URL = "https://raw.githubusercontent.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/main"
 
 # Display header image
 st.image("Real_DL_architect.gif", use_column_width=True)
