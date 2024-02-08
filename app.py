@@ -80,14 +80,28 @@ def app():
     st.write(f"Confidence: {confidence:.2%}")  # Display as a percentage
   
 class_selection = st.selectbox("Select a class to see an example image and prediction:", class_names)
+# Dropdown for class selection
+class_selection = st.selectbox("Select a class to see an example image and prediction:", class_names)
 
+# Check if a class has been selected
 if class_selection:
+    # Get the path to the example image
     example_image_path = get_example_image_path(class_selection.lower())
+    
+    # Display the name of the selected class and example image
     st.write(f"Example image for class: {class_selection}")
-    st.write(f"Example Image Prediction: {predicted_class}")
+    
+    # Load and display the example image
     example_image = Image.open(example_image_path)
-    st.image(example_image_path, caption=f"{class_selection.capitalize()} Example", use_column_width=True)
-    st.write(f"Prediction Confidence: {confidence:.2%}")  # Display as a percentage
+    st.image(example_image, caption=f"{class_selection.capitalize()} Example", use_column_width=True)
+    
+    # Resize the image to the size your model expects, preprocess it, and make a prediction
+    example_image_resized = example_image.resize((32, 32))  # Assuming the model expects 32x32 images
+    image_array = np.array(example_image_resized) / 255.0  # Normalize the image
+    image_array = image_array[np.newaxis, ...]  # Add a batch dimension
+    predictions = model.predict(image_array)
+    predicted_class = class_names[np.argmax(predictions)]
+    confidence = np.max(predictions)
 
 if uploaded_file is not None:
         if class_selection == predicted_class:
