@@ -67,7 +67,7 @@ def app():
     class_selection = st.selectbox("Select a class to see an example image and prediction:", class_names)
 
 # Make a prediction on the example image
-        example_image = example_image.resize((32, 32))  # Resize to match model expected input
+    example_image = example_image.resize((32, 32))  # Resize to match model expected input
 
     # Predict and display the result
     image_array = np.array(image) / 255.0  # Normalize the image
