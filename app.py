@@ -14,7 +14,6 @@ st.image("Real_DL_architect.gif", use_column_width=True)
 st.title("3D Natural Image Classification App")
 st.write("This app demonstrates image classification into different classes using a web application.")
 st.markdown("<span style='color:blue'>Author: Md Abu Sufian</span>", unsafe_allow_html=True)
-st.write("......Visualization of Design and Coding Under Construction.........")
 
 # Function to download and cache the TensorFlow model
 @st.cache(allow_output_mutation=True)
