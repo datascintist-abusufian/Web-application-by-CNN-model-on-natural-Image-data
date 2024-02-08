@@ -85,8 +85,8 @@ if class_selection:
         st.write(f"Example image for class: {class_selection}")
         st.write(f"Example Image Prediction: {predicted_class}")
         example_image = Image.open(example_image_path)
-  st.image(example_image_path, caption=f"{class_selection.capitalize()} Example", use_column_width=True)
-  st.write(f"Prediction Confidence: {confidence:.2%}")  # Display as a percentage
+    st.image(example_image_path, caption=f"{class_selection.capitalize()} Example", use_column_width=True)
+    st.write(f"Prediction Confidence: {confidence:.2%}")  # Display as a percentage
 
 if uploaded_file is not None:
         if class_selection == predicted_class:
