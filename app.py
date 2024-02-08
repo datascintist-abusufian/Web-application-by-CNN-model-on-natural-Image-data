@@ -80,7 +80,7 @@ def app():
     st.write(f"Confidence: {confidence:.2%}")  # Display as a percentage
 
 # Display example image for the selected class
-    if class_selection:
+  if class_selection:
     example_image_path = get_example_image_path(class_selection.lower())
     st.write(f"Example image for class: {class_selection}")
     st.write(f"Example Image Prediction: {predicted_class}")
@@ -88,7 +88,7 @@ def app():
     st.image(example_image_path, caption=f"{class_selection.capitalize()} Example", use_column_width=True)
     st.write(f"Prediction Confidence: {confidence:.2%}")  # Display as a percentage
 
-    if uploaded_file is not None:
+  if uploaded_file is not None:
         if class_selection == predicted_class:
             st.success(f"The model's prediction matches your selection: {predicted_class} with confidence {confidence:.2%}")
         else:
