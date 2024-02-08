@@ -100,9 +100,9 @@ if uploaded_file is not None:
     st.write(f"Model Prediction: {predicted_class}")
     st.write(f"Confidence: {confidence:.2%}")  # Display as a percentage
   
-     # Display the prediction and confidence
-     st.write(f"Example Image Prediction: {predicted_class}")
-     st.write(f"Prediction Confidence: {confidence:.2%}")  # Display as a percentage
+    # Display the prediction and confidence again (if needed)
+    st.write(f"Example Image Prediction: {predicted_class}")
+    st.write(f"Prediction Confidence: {confidence:.2%}")  # Display as a percentage
 
 if uploaded_file is not None:
         if class_selection == predicted_class:
