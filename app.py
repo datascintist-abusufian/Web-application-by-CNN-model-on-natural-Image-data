@@ -33,7 +33,7 @@ def load_model():
 model = load_model()
 
 # Example for debugging
-test_image_url = 'https://github.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/blob/main/cifar_image_cat_1.png'
+test_image_url = 'https://raw.githubusercontent.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/main/cifar_image_cat_1.png'
 try:
     example_image = Image.open(requests.get(test_image_url, stream=True).raw)
     st.image(example_image, caption=f"Test Image", use_column_width=True)
