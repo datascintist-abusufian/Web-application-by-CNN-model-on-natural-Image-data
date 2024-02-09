@@ -68,5 +68,5 @@ if class_selection:
     example_confidence = np.max(example_predictions)
     st.write(f"Image Class Prediction: {example_predicted_class}")
     st.write(f"Prediction Confidence: {example_confidence:.2%}")
-    except PIL.UnidentifiedImageError as e:
-    st.error(f"Failed to load image: {e}")
+ except PIL.UnidentifiedImageError as e:
+ st.error(f"Failed to load image: {e}")
