@@ -64,12 +64,10 @@ if uploaded_file is not None:
 class_selection = st.selectbox("Upload Or select a class to get prediction accuracy:", class_names)
 if class_selection:
     try:
-        example_image_filename = f"cifar_image_{class_selection.lower()}_1.png"
-        example_image_url = f"{BASE_IMAGE_URL}/{example_image_filename}"
-        response = requests.get(example_image_url, stream=True) # Define response here
-        
-    try:
+    example_image_filename = f"cifar_image_{class_selection.lower()}_1.png"
+    example_image_url = f"{BASE_IMAGE_URL}/{example_image_filename}"
     response = requests.get(example_image_url, stream=True)
+    
     if response.status_code == 200:
         from io import BytesIO
         example_image = Image.open(BytesIO(response.content)).convert('RGB')
@@ -84,10 +82,7 @@ if class_selection:
         st.write(f"Prediction Confidence: {example_confidence:.2%}")
     else:
         st.error("Failed to fetch example image. The image may not exist at the provided URL.")
+        
 except Exception as e:
     st.error(f"An error occurred: {e}")
-            
-    except Exception as e:
-        st.error(f"An error occurred: {e}")
-
 
