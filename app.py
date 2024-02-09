@@ -58,18 +58,18 @@ class_selection = st.selectbox("Upload Or select a class to get prediction accur
 if class_selection:
     example_image_path = get_example_image_path(class_selection.lower())
     try:
-        example_image = Image.open(requests.get(example_image_path, stream=True).raw)
-        st.image(example_image, caption=f"Image Class of {class_selection}", use_column_width=True)
+    example_image = Image.open(requests.get(example_image_path, stream=True).raw)
+    st.image(example_image, caption=f"Image Class of {class_selection}", use_column_width=True)
 
-        # Optionally: Predict and display for the example image
-        # Note: This part assumes you want to predict the example image automatically
-        # Resize and preprocess the example image
-        example_image_array = np.array(example_image.resize((32, 32))) / 255.0
-        example_image_array = example_image_array[np.newaxis, ...]
-        example_predictions = model.predict(example_image_array)
-        example_predicted_class = class_names[np.argmax(example_predictions)]
-        example_confidence = np.max(example_predictions)
-        st.write(f"Image Class Prediction: {example_predicted_class}")
-        st.write(f"Prediction Confidence: {example_confidence:.2%}")
-    except PIL.UnidentifiedImageError as e:
-        st.error(f"Failed to load image: {e}")
+    # Optionally: Predict and display for the example image
+    # Note: This part assumes you want to predict the example image automatically
+    # Resize and preprocess the example image
+    example_image_array = np.array(example_image.resize((32, 32))) / 255.0
+    example_image_array = example_image_array[np.newaxis, ...]
+    example_predictions = model.predict(example_image_array)
+    example_predicted_class = class_names[np.argmax(example_predictions)]
+    example_confidence = np.max(example_predictions)
+    st.write(f"Image Class Prediction: {example_predicted_class}")
+    st.write(f"Prediction Confidence: {example_confidence:.2%}")
+except UnidentifiedImageError as e:
+    st.error(f"Failed to load image: {e}")
