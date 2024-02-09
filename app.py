@@ -32,6 +32,15 @@ def load_model():
 
 model = load_model()
 
+# Example for debugging
+test_image_url = 'https://your-working-image-url.png'
+try:
+    example_image = Image.open(requests.get(test_image_url, stream=True).raw)
+    st.image(example_image, caption=f"Test Image", use_column_width=True)
+except Exception as e:
+    st.error(f"Failed to load image: {e}")
+
+
 # Sidebar for image upload
 uploaded_file = st.sidebar.file_uploader("Choose an image...", type=["jpg", "png", "jpeg"])
 
