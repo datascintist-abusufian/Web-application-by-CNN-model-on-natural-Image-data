@@ -66,6 +66,8 @@ if class_selection:
     try:
         example_image_filename = f"cifar_image_{class_selection.lower()}_1.png"
         example_image_url = f"{BASE_IMAGE_URL}/{example_image_filename}"
+        response = requests.get(example_image_url, stream=True) # Define response here
+
         if response.status_code == 200:
             example_image = Image.open(response.raw).convert('RGB')
             st.image(example_image, caption=f"Image Class of {class_selection}", use_column_width=True)
