@@ -8,7 +8,7 @@ from PIL import Image, UnidentifiedImageError
 
 # Define class names and base URL for example images
 class_names = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
-BASE_IMAGE_URL = "https://raw.githubusercontent.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/7709266852701c6c3b9aa1b19d7acd6ede11b543/cifar_image_dog_1.png"
+BASE_IMAGE_URL = "https://raw.githubusercontent.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/main"
 
 # Display the app header and description
 st.image("Real_DL_architect.gif", use_column_width=True)
@@ -64,9 +64,8 @@ if uploaded_file is not None:
 class_selection = st.selectbox("Upload Or select a class to get prediction accuracy:", class_names)
 if class_selection:
     try:
-        example_image_path = f"{BASE_IMAGE_URL}/cifar_image_{class_selection.lower()}_1.png"
-        response = requests.get(example_image_path, stream=True)
-        
+        example_image_filename = f"cifar_image_{class_selection.lower()}_1.png"
+        example_image_url = f"{BASE_IMAGE_URL}/{example_image_filename}"
         if response.status_code == 200:
             example_image = Image.open(response.raw).convert('RGB')
             st.image(example_image, caption=f"Image Class of {class_selection}", use_column_width=True)
