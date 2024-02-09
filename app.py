@@ -55,7 +55,7 @@ if uploaded_file is not None:
 class_selection = st.selectbox("Upload Or select a class to get prediction accuracy:", class_names)
 if class_selection:
     example_image_path = get_example_image_path(class_selection.lower())
-    example_image = Image.open(requests.get(example_image_path, stream=True).png)
+    example_image = Image.open(requests.get(example_image_path, stream=True).raw)
     st.image(example_image, caption=f"Image Class of {class_selection}", use_column_width=True)
 
     # Optionally: Predict and display for the example image
