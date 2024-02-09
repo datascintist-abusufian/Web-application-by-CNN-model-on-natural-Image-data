@@ -4,6 +4,8 @@ import numpy as np
 import tensorflow as tf
 import requests
 import os
+from PIL import Image, UnidentifiedImageError
+
 
 # Define class names and base URL for example images
 class_names = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
