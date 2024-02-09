@@ -9,7 +9,7 @@ from PIL import Image, UnidentifiedImageError
 
 # Define class names and base URL for example images
 class_names = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
-BASE_IMAGE_URL = "https://raw.githubusercontent.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/main/cifar_image_ship_1.png"
+BASE_IMAGE_URL = "https://raw.githubusercontent.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/main"
 
 # Display the app header and description
 st.image("Real_DL_architect.gif", use_column_width=True)
@@ -39,7 +39,7 @@ uploaded_file = st.sidebar.file_uploader("Choose an image...", type=["jpg", "png
 
 # Function to get the example image path from class name
 def get_example_image_path(class_name):
-    return f"{BASE_IMAGE_URL}/cifar_image_{class_name}_1.png"
+    return f"{BASE_IMAGE_URL}/cifar_image_{class_name.lower()}_1.png"
 
 # Process uploaded image and make predictions
 if uploaded_file is not None:
