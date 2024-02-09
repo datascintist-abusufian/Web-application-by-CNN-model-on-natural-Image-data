@@ -8,7 +8,7 @@ from PIL import Image, UnidentifiedImageError
 
 # Define class names and base URL for example images
 class_names = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
-BASE_IMAGE_URL = "https://raw.githubusercontent.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/main/cifar_image_airplane_1.png"
+BASE_IMAGE_URL = "https://raw.githubusercontent.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/7709266852701c6c3b9aa1b19d7acd6ede11b543/cifar_image_dog_1.png"
 
 # Display the app header and description
 st.image("Real_DL_architect.gif", use_column_width=True)
