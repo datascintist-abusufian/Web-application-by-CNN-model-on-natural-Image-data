@@ -65,16 +65,24 @@ class_selection = st.selectbox("Upload Or select a class to get prediction accur
 if class_selection:
     try:
         example_image_path = f"{BASE_IMAGE_URL}/cifar_image_{class_selection.lower()}_1.png"
-        example_image = Image.open(requests.get(example_image_path, stream=True).raw).convert('RGB')
-        st.image(example_image, caption=f"Image Class of {class_selection}", use_column_width=True)
-
-        # Optionally: Predict and display for the example image
-        example_image_array = np.array(example_image.resize((32, 32))) / 255.0
-        example_image_array = example_image_array[np.newaxis, ...]
-        example_predictions = model.predict(example_image_array)
-        example_predicted_class = class_names[np.argmax(example_predictions)]
-        example_confidence = np.max(example_predictions)
-        st.write(f"Image Class Prediction: {example_predicted_class}")
-        st.write(f"Prediction Confidence: {example_confidence:.2%}")
+        response = requests.get(example_image_path, stream=True)
+        
+        # Verify that the request was successful
+        if response.status_code != 200:
+            st.error(f"Failed to fetch example image. Status code: {response.status_code}")
+        else:
+            # Open the image and convert it to ensure compatibility
+            example_image = Image.open(response.raw).convert('RGB')
+            st.image(example_image, caption=f"Image Class of {class_selection}", use_column_width=True)
+            
+            # Optionally: Predict and display for the example image
+            example_image_array = np.array(example_image.resize((32, 32))) / 255.0
+            example_image_array = example_image_array[np.newaxis, ...]
+            example_predictions = model.predict(example_image_array)
+            example_predicted_class = class_names[np.argmax(example_predictions)]
+            example_confidence = np.max(example_predictions)
+            st.write(f"Image Class Prediction: {example_predicted_class}")
+            st.write(f"Prediction Confidence: {example_confidence:.2%}")
     except Exception as e:
         st.error(f"Failed to load example image: {e}")
+
