@@ -18,7 +18,7 @@ st.markdown("<span style='color:blue'>Author: Md Abu Sufian</span>", unsafe_allo
 # Function to download and cache the TensorFlow model
 @st.cache(allow_output_mutation=True)
 def load_model():
-    model_url = 'https://github.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/blob/main/cifar10_cnn.h5?raw=true'
+    model_url = 'https://github.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/blob/main/cifar10_cnn.h5'
     model_path = 'cifar10_cnn.h5'
     if not os.path.isfile(model_path):
         with st.spinner(f'Downloading model...'):
