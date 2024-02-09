@@ -67,6 +67,7 @@ if class_selection:
         example_image_filename = f"cifar_image_{class_selection.lower()}_1.png"
         example_image_url = f"{BASE_IMAGE_URL}/{example_image_filename}"
         response = requests.get(example_image_url, stream=True) # Define response here
+        
     try:
     response = requests.get(example_image_url, stream=True)
     if response.status_code == 200:
