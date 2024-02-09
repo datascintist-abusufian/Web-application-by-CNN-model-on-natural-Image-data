@@ -67,9 +67,11 @@ if class_selection:
         example_image_filename = f"cifar_image_{class_selection.lower()}_1.png"
         example_image_url = f"{BASE_IMAGE_URL}/{example_image_filename}"
         response = requests.get(example_image_url, stream=True) # Define response here
-
-if response.status_code == 200:
-        example_image = Image.open(response.raw).convert('RGB')
+try:
+    response = requests.get(example_image_url, stream=True)
+    if response.status_code == 200:
+        from io import BytesIO
+        example_image = Image.open(BytesIO(response.content)).convert('RGB')
         st.image(example_image, caption=f"Image Class of {class_selection}", use_column_width=True)
         
         example_image_array = np.array(example_image.resize((32, 32))) / 255.0
@@ -81,7 +83,6 @@ if response.status_code == 200:
         st.write(f"Prediction Confidence: {example_confidence:.2%}")
     else:
         st.error("Failed to fetch example image. The image may not exist at the provided URL.")
-        
 except Exception as e:
     st.error(f"An error occurred: {e}")
             
