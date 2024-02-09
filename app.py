@@ -69,18 +69,19 @@ if class_selection:
         response = requests.get(example_image_url, stream=True) # Define response here
 
         if response.status_code == 200:
-            example_image = Image.open(response.raw).convert('RGB')
-            st.image(example_image, caption=f"Image Class of {class_selection}", use_column_width=True)
-            
-            example_image_array = np.array(example_image.resize((32, 32))) / 255.0
-            example_image_array = example_image_array[np.newaxis, ...]  # Add batch dimension
-            example_predictions = model.predict(example_image_array)
-            example_predicted_class = class_names[np.argmax(example_predictions)]
-            example_confidence = np.max(example_predictions)
-            st.write(f"Image Class Prediction: {example_predicted_class}")
-            st.write(f"Prediction Confidence: {example_confidence:.2%}")
-        else:
-            st.error("Failed to fetch example image. The image may not exist at the provided URL.")
+    from io import BytesIO
+    example_image = Image.open(BytesIO(response.content)).convert('RGB')
+    st.image(example_image, caption=f"Image Class of {class_selection}", use_column_width=True)
+    
+    example_image_array = np.array(example_image.resize((32, 32))) / 255.0
+    example_image_array = example_image_array[np.newaxis, ...]  # Add batch dimension
+    example_predictions = model.predict(example_image_array)
+    example_predicted_class = class_names[np.argmax(example_predictions)]
+    example_confidence = np.max(example_predictions)
+    st.write(f"Image Class Prediction: {example_predicted_class}")
+    st.write(f"Prediction Confidence: {example_confidence:.2%}")
+else:
+    st.error("Failed to fetch example image. The image may not exist at the provided URL.")
             
     except Exception as e:
         st.error(f"An error occurred: {e}")
