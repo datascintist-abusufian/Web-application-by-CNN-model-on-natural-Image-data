@@ -49,7 +49,7 @@ uploaded_file = st.sidebar.file_uploader("Choose an image...", type=["jpg", "png
 if uploaded_file is not None:
     try:
         image = Image.open(uploaded_file).convert('RGB').resize((32, 32))
-        st.image(image, caption='Uploaded Image', use_column_width=True)
+        st.image(image, caption='Uploaded Image', width=300)
         image_array = np.array(image) / 255.0
         image_array = image_array[np.newaxis, ...]
         predictions = model.predict(image_array)
