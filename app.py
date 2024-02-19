@@ -8,8 +8,27 @@ from PIL import Image, UnidentifiedImageError
 
 # Define class names and base URL for example images
 class_names = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
-BASE_IMAGE_URL = "https://github.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/blob/main/cifar_image_airplane_1.png"
+# List of raw image URLs
+image_urls = [
+    "https://raw.githubusercontent.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/main/cifar_image_airplane_1.png",
+    "https://raw.githubusercontent.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/main/cifar_image_automobile_1.png",
+    "https://raw.githubusercontent.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/main/cifar_image_bird_1.png",
+    "https://raw.githubusercontent.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/main/cifar_image_cat_1.png",
+    "https://raw.githubusercontent.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/main/cifar_image_deer_1.png",
+    "https://raw.githubusercontent.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/main/cifar_image_dog_1.png",
+    "https://raw.githubusercontent.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/main/cifar_image_frog_1.png",
+    "https://raw.githubusercontent.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/main/cifar_image_horse_1.png",
+    "https://raw.githubusercontent.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/main/cifar_image_ship_1.png",
+    "https://raw.githubusercontent.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/main/cifar_image_truck_1.png",
+]
 
+st.title('CIFAR-10 Image Classes')
+
+# Display each image with its class name
+for idx, url in enumerate(image_urls):
+    class_name = url.split('_')[-2]  # Extract class name from the URL
+    st.subheader(f'Class: {class_name.capitalize()}')
+    st.image(url, caption=f'{class_name.capitalize()} Image', use_column_width=True)
 # Display the app header and description
 st.image("Real_DL_architect.gif", use_column_width=True)
 st.title("3D Natural Image Classification App")
