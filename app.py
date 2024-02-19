@@ -38,6 +38,26 @@ if model is None:
 
 # Display the app title
 st.title('CIFAR-10 Image Classification')
+# Example class distribution data - replace with your actual data
+class_distribution = {
+    "airplane": 250,
+    "automobile": 300,
+    "bird": 225,
+    "cat": 275,
+    "deer": 250,
+    "dog": 300,
+    "frog": 225,
+    "horse": 275,
+    "ship": 250,
+    "truck": 300
+}
+
+# Display the distribution as a bar chart
+st.subheader('Class Distribution Across the Dataset')
+st.bar_chart(class_distribution)
+
+# Sidebar for class selection
+class_selection = st.sidebar.selectbox("Select a class:", class_names)
 
 # Sidebar for class selection
 class_selection = st.sidebar.selectbox("Select a class to display a random image:", class_names)
