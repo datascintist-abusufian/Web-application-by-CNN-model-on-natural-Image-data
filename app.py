@@ -42,18 +42,16 @@ st.title('CIFAR-10 Image Classification')
 # Sidebar for class selection
 class_selection = st.sidebar.selectbox("Select a class to display a random image:", class_names)
 
-# When a class is selected, display a random image from that class and its prediction
+# When a class is selected, display the corresponding image and its prediction
 if class_selection:
-    # Generate a random image number
-    image_number = random.randint(1, 10)  # Assuming there are 10 images per class
-    image_url = f"{base_image_url}cifar_image_{class_selection.lower()}_{image_number}.png"
+    image_url = f"{base_image_url}cifar_image_{class_selection.lower()}_1.png"
 
     try:
         response = requests.get(image_url)
         if response.status_code == 200:
             # Display the image
             image = Image.open(BytesIO(response.content)).convert('RGB')
-            st.image(image, caption=f"Random {class_selection.capitalize()} Image", use_column_width=True)
+            st.image(image, caption=f"{class_selection.capitalize()} Image", use_column_width=True)
 
             # Preprocess the image and make a prediction
             image_array = np.array(image.resize((32, 32))) / 255.0
@@ -66,24 +64,7 @@ if class_selection:
             st.write(f"Predicted Class: {predicted_class.capitalize()}")
             st.write(f"Confidence: {confidence:.2%}")
         else:
-            st.error("Failed to fetch the example image.")
+            st.error(f"Failed to fetch the example image. Status code: {response.status_code}")
     except Exception as e:
-        st.error(f"An error occurred: {e}")
+        st.error(f"An error occurred while fetching the image: {e}")
 
-# Sidebar for image upload
-uploaded_file = st.sidebar.file_uploader("Or upload an image for classification:", type=["jpg", "png", "jpeg"])
-
-# Process uploaded image and make predictions
-if uploaded_file:
-    try:
-        image = Image.open(uploaded_file).convert('RGB').resize((32, 32))
-        st.image(image, caption='Uploaded Image', width=300)
-        image_array = np.array(image) / 255.0
-        image_array = image_array[np.newaxis, ...]  # Add batch dimension
-        predictions = model.predict(image_array)
-        predicted_class = class_names[np.argmax(predictions)]
-        confidence = np.max(predictions)
-        st.write(f"Model Prediction: {predicted_class.capitalize()}")
-        st.write(f"Confidence: {confidence:.2%}")
-    except Exception as e:
-        st.error(f"Failed to process the uploaded image: {e}")
