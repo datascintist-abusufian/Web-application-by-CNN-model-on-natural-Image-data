@@ -12,25 +12,11 @@ class_names = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "
 # Base URL for the images
 base_image_url = 'https://raw.githubusercontent.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/main/'
 
-st.title('CIFAR-10 Image Classes')
-
-# Function to download and cache the TensorFlow model
-@st.cache(allow_output_mutation=True)
-def load_model():
-    model_path = 'cifar10_cnn.h5'
-    model_url = f"{base_image_url}{model_path}"
-    # ... rest of your load_model function ...
-
-# Sidebar for class selection
-class_selection = st.sidebar.selectbox("Select a class to see an example image:", class_names)
-
-# Load the model
-model = load_model()
-
 # When a class is selected, display a random image from that class and its prediction
 if class_selection:
-    # Fetch a random image from the selected class
-    image_url = f"{base_image_url}sample_data/cifar_image_{class_selection.lower()}_{random.randint(1,10)}.png"
+    # Generate a random image number. Adjust the range if you have a different number of images per class.
+    image_number = random.randint(1, 10)  # Assuming there are 10 images per class
+    image_url = f"{base_image_url}cifar_image_{class_selection.lower()}_{image_number}.png"
     
     try:
         response = requests.get(image_url)
