@@ -4,12 +4,10 @@ import numpy as np
 import tensorflow as tf
 import requests
 import os
-from PIL import Image, UnidentifiedImageError
 
-st.image("Real_DL_architect.gif", use_column_width=True)
-
-# Define class names and base URL for example images
+# Define class names
 class_names = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
+
 # List of raw image URLs
 image_urls = [
     "https://raw.githubusercontent.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/main/cifar_image_airplane_1.png",
@@ -23,15 +21,10 @@ image_urls = [
     "https://raw.githubusercontent.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/main/cifar_image_ship_1.png",
     "https://raw.githubusercontent.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/main/cifar_image_truck_1.png",
 ]
-
 st.title('CIFAR-10 Image Classes')
 
-# Display each image with its class name
-for idx, url in enumerate(image_urls):
-    class_name = url.split('_')[-2]  # Extract class name from the URL
-    st.subheader(f'Class: {class_name.capitalize()}')
-    st.image(url, caption=f'{class_name.capitalize()} Image', use_column_width=True)
 # Display the app header and description
+st.image("Real_DL_architect.gif", use_column_width=True)
 st.title("3D Natural Image Classification App")
 st.write("This app demonstrates image classification into different classes using a web application.")
 st.markdown("<span style='color:blue'>Author: Md Abu Sufian</span>", unsafe_allow_html=True)
@@ -71,7 +64,7 @@ if uploaded_file is not None:
         image = Image.open(uploaded_file).convert('RGB').resize((32, 32))
         st.image(image, caption='Uploaded Image', width=300)
         image_array = np.array(image) / 255.0
-        image_array = image_array[np.newaxis, ...]
+        image_array = image_array[np.newaxis, ...]  # Add batch dimension
         predictions = model.predict(image_array)
         predicted_class = class_names[np.argmax(predictions)]
         confidence = np.max(predictions)
@@ -79,29 +72,18 @@ if uploaded_file is not None:
         st.write(f"Confidence: {confidence:.2%}")
     except Exception as e:
         st.error(f"Failed to process the uploaded image: {e}")
-        
-# Class selection and example image display
-class_selection = st.selectbox("Upload Or select a class to get prediction accuracy:", class_names)
-if class_selection:
-    try:
-        example_image_filename = f"cifar_image_{class_selection.lower()}_1.png"
-        example_image_url = f"{BASE_IMAGE_URL}/{example_image_filename}"
-        response = requests.get(example_image_url, stream=True)
-        
-        if response.status_code == 200:
-            from io import BytesIO
-            example_image = Image.open(BytesIO(response.content)).convert('RGB')
-            st.image(example_image, caption=f"Image Class of {class_selection}", use_column_width=True)
-            
-            example_image_array = np.array(example_image.resize((32, 32))) / 255.0
-            example_image_array = example_image_array[np.newaxis, ...]  # Add batch dimension
-            example_predictions = model.predict(example_image_array)
-            example_predicted_class = class_names[np.argmax(example_predictions)]
-            example_confidence = np.max(example_predictions)
-            st.write(f"Image Class Prediction: {example_predicted_class}")
-            st.write(f"Prediction Confidence: {example_confidence:.2%}")
-        else:
-            st.error("Failed to fetch example image. The image may not exist at the provided URL.")
-            
-    except Exception as e:
-        st.error(f"An error occurred: {e}")
+
+# Display each example image with its class name
+for idx, url in enumerate(image_urls):
+    class_name = class_names[idx]  # Use the class names list
+    st.subheader(f'Class: {class_name.capitalize()}')
+    st.image(url, caption=f'{class_name.capitalize()} Image', use_column_width=True)
+
+# The following section seems to be intended for selecting a class and displaying
+# an example image from the preloaded set, but since we are already displaying all images,
+# it's commented out. You can uncomment and adapt it if needed.
+# 
+# class_selection = st.selectbox("Or select a class to see an example image:", class_names)
+# if class_selection:
+#     # Logic to display selected class example image
+#     # ...
