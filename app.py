@@ -8,7 +8,6 @@ import random
 
 # Define class names
 class_names = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
-
 # Base URL for the images
 base_image_url = 'https://raw.githubusercontent.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/main/'
 
