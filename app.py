@@ -6,6 +6,8 @@ import requests
 import os
 from PIL import Image, UnidentifiedImageError
 
+st.image("Real_DL_architect.gif", use_column_width=True)
+
 # Define class names and base URL for example images
 class_names = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
 # List of raw image URLs
@@ -30,7 +32,6 @@ for idx, url in enumerate(image_urls):
     st.subheader(f'Class: {class_name.capitalize()}')
     st.image(url, caption=f'{class_name.capitalize()} Image', use_column_width=True)
 # Display the app header and description
-st.image("Real_DL_architect.gif", use_column_width=True)
 st.title("3D Natural Image Classification App")
 st.write("This app demonstrates image classification into different classes using a web application.")
 st.markdown("<span style='color:blue'>Author: Md Abu Sufian</span>", unsafe_allow_html=True)
