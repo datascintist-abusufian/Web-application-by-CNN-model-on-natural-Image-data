@@ -35,6 +35,13 @@ model = get_model()
 if model is None:
     st.error("The app won't function without the model, please fix the error above.")
     st.stop()
+    
+# Sidebar: Model Information Section
+st.sidebar.header("Model Information")
+model_accuracy = 0.85  # Example accuracy, replace with your model's accuracy
+st.sidebar.write("This application uses a Convolutional Neural Network (CNN) trained on the CIFAR-10 dataset.")
+st.sidebar.write(f"Model Prediction Accuracy: {model_accuracy:.2%}")
+st.sidebar.write("The CIFAR-10 dataset consists of 60000 32x32 colour images in 10 classes, with 6000 images per class.")
 
 # Display the app title
 st.title('CIFAR-10 Image Classification')
