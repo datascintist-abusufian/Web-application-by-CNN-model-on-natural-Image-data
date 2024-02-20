@@ -7,7 +7,6 @@ import requests
 from io import BytesIO
 import random
 import os
-from collections import Counter
 
 # Define class names
 class_names = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"]
@@ -46,14 +45,19 @@ st.sidebar.write("The CIFAR-10 dataset consists of 60000 32x32 colour images in 
 
 # Display the app title
 st.title('CIFAR-10 Image Classification')
-# Assuming test_labels are loaded and represent the actual class labels from CIFAR-10 test set
-label_counts = Counter(test_labels)
-
-# Convert counts to the format expected by Streamlit's bar_chart
-class_distribution_actual = {class_names[label]: count for label, count in label_counts.items()}
-
-# Use this actual distribution in your Streamlit app
-st.bar_chart(class_distribution_actual)
+# Example class distribution data - replace with your actual data
+class_distribution = {
+    "airplane": 250,
+    "automobile": 300,
+    "bird": 225,
+    "cat": 275,
+    "deer": 250,
+    "dog": 300,
+    "frog": 225,
+    "horse": 275,
+    "ship": 250,
+    "truck": 300
+}
 
 # Display the distribution as a bar chart
 st.subheader('Class Distribution Across the Dataset')
