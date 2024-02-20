@@ -38,7 +38,7 @@ if model is None:
     
 # Sidebar: Model Information Section
 st.sidebar.header("Model Information")
-model_accuracy = 0.85  # Example accuracy, replace with your model's accuracy
+model_accuracy = 0.90  # Example accuracy, replace with your model's accuracy
 st.sidebar.write("This application uses a Convolutional Neural Network (CNN) trained on the CIFAR-10 dataset.")
 st.sidebar.write(f"Model Prediction Accuracy: {model_accuracy:.2%}")
 st.sidebar.write("The CIFAR-10 dataset consists of 60000 32x32 colour images in 10 classes, with 6000 images per class.")
