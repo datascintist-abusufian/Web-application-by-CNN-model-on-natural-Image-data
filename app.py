@@ -1,4 +1,4 @@
-import streamlit as st
+give import streamlit as st
 from PIL import Image
 import numpy as np
 import tensorflow as tf
@@ -89,5 +89,4 @@ if class_selection:
         else:
             st.error(f"Failed to fetch the example image. Status code: {response.status_code}")
     except Exception as e:
-        st.error(f"An error occurred while fetching the image: {e}")
-
+        st.error(f"An error occurred while fetching the image: {e}") 
