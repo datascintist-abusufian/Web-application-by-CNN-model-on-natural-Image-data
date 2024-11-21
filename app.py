@@ -8,9 +8,13 @@ from io import BytesIO
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-import cv2
 import matplotlib.pyplot as plt
-import seaborn as sns
+import random
+import os
+
+# Avoid OpenCV if not needed
+def resize_image(image, size):
+    return image.resize(size)
 
 # Page configuration
 st.set_page_config(
