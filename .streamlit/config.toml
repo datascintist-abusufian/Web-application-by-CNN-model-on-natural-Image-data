@@ -9,4 +9,4 @@ font = "sans serif"
 maxUploadSize = 200
 
 [browser]
-gatherUsageStats = false' > .streamlit/config.toml
+
