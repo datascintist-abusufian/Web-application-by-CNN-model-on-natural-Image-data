@@ -2,10 +2,10 @@ import streamlit as st
 from PIL import Image
 import numpy as np
 import tensorflow as tf
-from tensorflow.keras.models import load_model
+from tensorflow.keras.models import load_model, Model
 from tensorflow.keras.applications import ResNet50, VGG16, MobileNetV2
-from tensorflow.keras.layers import Dense, GlobalAveragePooling2D, Dropout
-from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Dense, GlobalAveragePooling2D, Dropout, Input
+from tensorflow.keras.optimizers import Adam
 import requests
 from io import BytesIO
 import plotly.express as px
@@ -14,12 +14,7 @@ from plotly.subplots import make_subplots
 import os
 import time
 import pandas as pd
-import seaborn as sns
-import matplotlib.pyplot as plt
-from sklearn.manifold import TSNE
-from sklearn.decomposition import PCA
-from sklearn.metrics import confusion_matrix, classification_report
-import cv2
+from sklearn.metrics import confusion_matrix
 from scipy.stats import entropy
 import warnings
 warnings.filterwarnings('ignore')
@@ -89,6 +84,13 @@ st.markdown("""
         transform: scale(1.02);
         box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
     }
+    .info-box {
+        padding: 1rem;
+        background: #d1ecf1;
+        border-radius: 10px;
+        border-left: 5px solid #17a2b8;
+        margin: 1rem 0;
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -114,49 +116,125 @@ def initialize_session_state():
         st.session_state.prediction_history = []
     if 'model_loaded' not in st.session_state:
         st.session_state.model_loaded = False
+    if 'model_info' not in st.session_state:
+        st.session_state.model_info = {}
 
 initialize_session_state()
 
 # ============================================================================
 # MODEL CREATION FUNCTIONS
 # ============================================================================
-def create_cnn_model():
+def create_cnn_model(input_shape=(32, 32, 3), num_classes=10):
     """Create a simple CNN model for CIFAR-10"""
     from tensorflow.keras import layers, models
     
     model = models.Sequential([
-        layers.Conv2D(32, (3, 3), activation='relu', input_shape=(32, 32, 3)),
+        layers.Conv2D(32, (3, 3), activation='relu', padding='same', input_shape=input_shape),
+        layers.BatchNormalization(),
+        layers.Conv2D(32, (3, 3), activation='relu', padding='same'),
+        layers.BatchNormalization(),
         layers.MaxPooling2D((2, 2)),
-        layers.Conv2D(64, (3, 3), activation='relu'),
+        layers.Dropout(0.25),
+        
+        layers.Conv2D(64, (3, 3), activation='relu', padding='same'),
+        layers.BatchNormalization(),
+        layers.Conv2D(64, (3, 3), activation='relu', padding='same'),
+        layers.BatchNormalization(),
         layers.MaxPooling2D((2, 2)),
-        layers.Conv2D(64, (3, 3), activation='relu'),
+        layers.Dropout(0.25),
+        
+        layers.Conv2D(128, (3, 3), activation='relu', padding='same'),
+        layers.BatchNormalization(),
+        layers.Conv2D(128, (3, 3), activation='relu', padding='same'),
+        layers.BatchNormalization(),
+        layers.MaxPooling2D((2, 2)),
+        layers.Dropout(0.25),
+        
         layers.Flatten(),
-        layers.Dense(64, activation='relu'),
-        layers.Dense(10, activation='softmax')
+        layers.Dense(256, activation='relu'),
+        layers.BatchNormalization(),
+        layers.Dropout(0.5),
+        layers.Dense(num_classes, activation='softmax')
     ])
     
-    model.compile(optimizer='adam',
-                  loss='categorical_crossentropy',
-                  metrics=['accuracy'])
+    model.compile(
+        optimizer=Adam(learning_rate=0.001),
+        loss='categorical_crossentropy',
+        metrics=['accuracy']
+    )
     
     return model
 
-def create_transfer_learning_model(base_model_class, input_shape=(32, 32, 3)):
-    """Create a transfer learning model"""
-    base_model = base_model_class(weights='imagenet', include_top=False, input_shape=input_shape)
+def create_transfer_learning_model(base_model_class, input_shape=(32, 32, 3), num_classes=10):
+    """Create a transfer learning model with proper input handling"""
+    # Handle different input sizes for different base models
+    if base_model_class == ResNet50:
+        target_size = (224, 224)
+    elif base_model_class == VGG16:
+        target_size = (224, 224)
+    elif base_model_class == MobileNetV2:
+        target_size = (224, 224)
+    else:
+        target_size = (32, 32)
+    
+    # Create input layer with correct size
+    inputs = Input(shape=target_size + (3,))
+    
+    # Load base model with correct input size
+    base_model = base_model_class(
+        weights='imagenet', 
+        include_top=False, 
+        input_tensor=inputs
+    )
     base_model.trainable = False
     
+    # Add custom layers
     x = GlobalAveragePooling2D()(base_model.output)
-    x = Dense(128, activation='relu')(x)
+    x = Dense(512, activation='relu')(x)
     x = Dropout(0.5)(x)
-    output = Dense(10, activation='softmax')(x)
+    x = Dense(256, activation='relu')(x)
+    x = Dropout(0.3)(x)
+    output = Dense(num_classes, activation='softmax')(x)
     
-    model = Model(inputs=base_model.input, outputs=output)
-    model.compile(optimizer='adam',
-                  loss='categorical_crossentropy',
-                  metrics=['accuracy'])
+    model = Model(inputs=inputs, outputs=output)
     
-    return model
+    model.compile(
+        optimizer=Adam(learning_rate=0.001),
+        loss='categorical_crossentropy',
+        metrics=['accuracy']
+    )
+    
+    return model, target_size
+
+def get_model_info(model_type):
+    """Get model information"""
+    info = {
+        'CNN': {
+            'name': 'Custom CNN',
+            'input_size': (32, 32, 3),
+            'params': '~1.2M',
+            'description': 'Custom CNN with batch normalization and dropout'
+        },
+        'ResNet50': {
+            'name': 'ResNet50',
+            'input_size': (224, 224, 3),
+            'params': '~25.6M',
+            'description': 'ResNet50 with transfer learning'
+        },
+        'VGG16': {
+            'name': 'VGG16',
+            'input_size': (224, 224, 3),
+            'params': '~14.7M',
+            'description': 'VGG16 with transfer learning'
+        },
+        'MobileNetV2': {
+            'name': 'MobileNetV2',
+            'input_size': (224, 224, 3),
+            'params': '~3.5M',
+            'description': 'MobileNetV2 with transfer learning'
+        }
+    }
+    return info.get(model_type, info['CNN'])
 
 # ============================================================================
 # MODEL LOADING WITH FALLBACK
@@ -167,55 +245,60 @@ def load_or_create_model(model_type='CNN'):
     try:
         model = None
         model_path = f'models/cifar10_{model_type.lower()}.h5'
+        os.makedirs('models', exist_ok=True)
         
-        # Try to load from file
+        # Try to load from local file
         if os.path.exists(model_path):
             try:
-                model = load_model(model_path)
-                st.success(f"✅ Model loaded from local file: {model_path}")
-                return model
+                with st.spinner(f"Loading {model_type} model from local file..."):
+                    model = load_model(model_path)
+                    st.success(f"✅ {model_type} model loaded from local file!")
+                    return model, 'local'
             except Exception as e:
                 st.warning(f"Could not load local model: {str(e)}")
         
         # Try to download from URL
         url = f"https://github.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/raw/main/cifar10_{model_type.lower()}.h5"
         try:
-            response = requests.get(url, timeout=10)
-            if response.status_code == 200:
-                os.makedirs('models', exist_ok=True)
-                with open(model_path, 'wb') as f:
-                    f.write(response.content)
-                model = load_model(model_path)
-                st.success(f"✅ Model downloaded and loaded from: {url}")
-                return model
-        except:
-            pass
+            with st.spinner(f"Downloading {model_type} model from URL..."):
+                response = requests.get(url, timeout=30)
+                if response.status_code == 200:
+                    with open(model_path, 'wb') as f:
+                        f.write(response.content)
+                    model = load_model(model_path)
+                    st.success(f"✅ {model_type} model downloaded and loaded!")
+                    return model, 'download'
+        except Exception as e:
+            st.info(f"Model not found online. Creating new {model_type} model...")
         
         # If no model found, create one
-        st.info(f"🔄 No pre-trained model found. Creating a new {model_type} model...")
-        
-        with st.spinner(f"Creating {model_type} model... This may take a moment..."):
+        with st.spinner(f"🔄 Creating new {model_type} model... This may take a moment..."):
+            info = get_model_info(model_type)
+            input_shape = info['input_size']
+            
             if model_type == 'CNN':
-                model = create_cnn_model()
-            elif model_type == 'ResNet50':
-                model = create_transfer_learning_model(ResNet50, input_shape=(32, 32, 3))
-            elif model_type == 'VGG16':
-                model = create_transfer_learning_model(VGG16, input_shape=(32, 32, 3))
-            elif model_type == 'MobileNetV2':
-                model = create_transfer_learning_model(MobileNetV2, input_shape=(32, 32, 3))
+                model = create_cnn_model(input_shape=input_shape)
+                st.session_state.model_info['input_size'] = input_shape
+            elif model_type in ['ResNet50', 'VGG16', 'MobileNetV2']:
+                base_class = {
+                    'ResNet50': ResNet50,
+                    'VGG16': VGG16,
+                    'MobileNetV2': MobileNetV2
+                }[model_type]
+                model, target_size = create_transfer_learning_model(base_class)
+                st.session_state.model_info['input_size'] = (target_size, target_size, 3)
             else:
                 model = create_cnn_model()
+                st.session_state.model_info['input_size'] = (32, 32, 3)
             
             # Save the model
-            os.makedirs('models', exist_ok=True)
             model.save(model_path)
             st.success(f"✅ New {model_type} model created and saved!")
-        
-        return model
+            return model, 'created'
         
     except Exception as e:
         st.error(f"Error loading/creating model: {str(e)}")
-        return None
+        return None, None
 
 # ============================================================================
 # IMAGE PREPROCESSING
@@ -223,18 +306,17 @@ def load_or_create_model(model_type='CNN'):
 def preprocess_image(image, model_type='CNN'):
     """Preprocess image based on model type"""
     try:
-        if model_type in ['ResNet50', 'VGG16', 'MobileNetV2']:
-            img_resized = image.resize((32, 32))
-        else:
-            img_resized = image.resize((32, 32))
+        info = get_model_info(model_type)
+        target_size = info['input_size'][:2]  # Get (height, width)
         
+        # Resize image
+        img_resized = image.resize(target_size)
+        
+        # Convert to array and normalize
         img_array = np.array(img_resized)
+        img_array = img_array.astype(np.float32) / 255.0
         
-        if model_type == 'CNN':
-            img_array = img_array / 255.0
-        else:
-            img_array = img_array / 255.0
-        
+        # Add batch dimension
         return np.expand_dims(img_array, axis=0)
         
     except Exception as e:
@@ -361,7 +443,7 @@ def main():
     st.markdown("""
     <div class="gradient-header">
         <h1>🧠 Advanced CIFAR-10 Research Classifier</h1>
-        <p>Deep Learning Image Classification for Research Applications</p>
+        <p>Multi-Model Deep Learning Analysis for Research Applications</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -376,51 +458,64 @@ def main():
             help="Different architectures for comparison"
         )
         
-        # Load model
+        # Show model info
+        info = get_model_info(model_type)
+        st.markdown(f"""
+        <div class="info-box">
+            <strong>📋 Model Info</strong><br>
+            <strong>Name:</strong> {info['name']}<br>
+            <strong>Input Size:</strong> {info['input_size'][0]}x{info['input_size'][1]}<br>
+            <strong>Parameters:</strong> {info['params']}<br>
+            <strong>Description:</strong> {info['description']}
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Load model button
         if st.button("🔄 Load/Create Model", use_container_width=True):
             with st.spinner(f"Loading/Creating {model_type} model..."):
-                st.session_state.model = load_or_create_model(model_type)
-                st.session_state.model_type = model_type
-                st.session_state.model_loaded = st.session_state.model is not None
-                if st.session_state.model_loaded:
-                    st.success(f"✅ {model_type} model ready!")
+                model, source = load_or_create_model(model_type)
+                if model is not None:
+                    st.session_state.model = model
+                    st.session_state.model_type = model_type
+                    st.session_state.model_loaded = True
+                    
+                    if source == 'local':
+                        st.success(f"✅ {model_type} model loaded from local file!")
+                    elif source == 'download':
+                        st.success(f"✅ {model_type} model downloaded and loaded!")
+                    else:
+                        st.success(f"✅ New {model_type} model created and loaded!")
                 else:
                     st.error("❌ Failed to load/create model")
         
-        st.markdown("---")
-        
-        # Model info
-        st.subheader("📊 Model Information")
-        if st.session_state.model_loaded:
-            st.info(f"""
-            **Current Model:** {st.session_state.model_type}
-            **Classes:** 10
-            **Input Size:** 32x32
-            **Dataset:** CIFAR-10
-            **Status:** ✅ Loaded
-            """)
+        # Check if model is loaded
+        if st.session_state.model_loaded and st.session_state.model is not None:
+            st.markdown("---")
+            st.success(f"✅ {st.session_state.model_type} model is ready!")
+            
+            # Model performance stats
+            if st.session_state.prediction_history:
+                st.subheader("📊 Performance")
+                st.metric("Total Predictions", len(st.session_state.prediction_history))
+                correct = sum([1 for p in st.session_state.prediction_history if p.get('correct', False)])
+                if len(st.session_state.prediction_history) > 0:
+                    st.metric("Accuracy", f"{(correct/len(st.session_state.prediction_history))*100:.1f}%")
         else:
             st.warning("⚠️ No model loaded. Click 'Load/Create Model' to get started.")
-        
-        if st.session_state.prediction_history:
-            st.metric("Total Predictions", len(st.session_state.prediction_history))
-            correct = sum([1 for p in st.session_state.prediction_history if p.get('correct', False)])
-            if len(st.session_state.prediction_history) > 0:
-                st.metric("Accuracy", f"{(correct/len(st.session_state.prediction_history))*100:.1f}%")
     
     # Check model
     if not st.session_state.model_loaded or st.session_state.model is None:
         st.warning("⚠️ Please load a model from the sidebar to begin analysis.")
-        st.info("💡 Click the 'Load/Create Model' button to download or create a model.")
+        st.info("💡 Click the 'Load/Create Model' button to load or create a model.")
         
-        # Show sample images anyway
-        st.subheader("📸 Sample Images (Model not loaded)")
-        cols = st.columns(4)
-        for idx, class_name in enumerate(CLASS_NAMES[:4]):
+        # Show sample images
+        st.subheader("📸 Sample Images")
+        cols = st.columns(5)
+        for idx, class_name in enumerate(CLASS_NAMES[:5]):
             with cols[idx]:
                 try:
                     image_url = f"{BASE_IMAGE_URL}cifar_image_{class_name.lower()}_1.png"
-                    response = requests.get(image_url)
+                    response = requests.get(image_url, timeout=5)
                     if response.status_code == 200:
                         image = Image.open(BytesIO(response.content)).convert('RGB')
                         st.image(image, caption=class_name.capitalize(), width=None)
@@ -443,7 +538,7 @@ def main():
         
         try:
             image_url = f"{BASE_IMAGE_URL}cifar_image_{selected_class.lower()}_1.png"
-            response = requests.get(image_url)
+            response = requests.get(image_url, timeout=5)
             
             if response.status_code == 200:
                 image = Image.open(BytesIO(response.content)).convert('RGB')
