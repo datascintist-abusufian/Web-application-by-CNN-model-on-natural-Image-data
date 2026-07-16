@@ -351,22 +351,17 @@ def plot_feature_space(features, labels=None, method='PCA'):
 def create_confusion_matrix_plot(y_true, y_pred):
     """Create confusion matrix visualization with proper error handling"""
     try:
-        # Check if we have data
         if len(y_true) == 0 or len(y_pred) == 0:
             return None
         
-        # Ensure both arrays have the same length
         if len(y_true) != len(y_pred):
             return None
         
-        # Get unique classes from both arrays
         all_classes = sorted(set(y_true) | set(y_pred))
         class_names = [CLASS_NAMES[i] for i in all_classes if i < len(CLASS_NAMES)]
         
-        # Create confusion matrix
         cm = confusion_matrix(y_true, y_pred)
         
-        # Create heatmap
         fig = px.imshow(
             cm,
             x=class_names,
@@ -468,8 +463,8 @@ def main():
             if response.status_code == 200:
                 image = Image.open(BytesIO(response.content)).convert('RGB')
                 
-                # Display image
-                st.image(image, caption=f"Sample {selected_class.capitalize()} Image", use_container_width=True)
+                # Display image - FIXED: use width instead of use_container_width
+                st.image(image, caption=f"Sample {selected_class.capitalize()} Image", width=None)
                 
                 # Upload option
                 uploaded_file = st.file_uploader(
@@ -479,7 +474,7 @@ def main():
                 
                 if uploaded_file:
                     image = Image.open(uploaded_file).convert('RGB')
-                    st.image(image, caption="Uploaded Image", use_container_width=True)
+                    st.image(image, caption="Uploaded Image", width=None)
                 
                 # Analyze button
                 if st.button("🔬 Analyze Image", type="primary", use_container_width=True):
@@ -533,14 +528,14 @@ def main():
                             with col3:
                                 st.metric("Inference Time", f"{inference_time*1000:.1f} ms")
                             
-                            # Confidence plot
+                            # Confidence plot - FIXED: use width='stretch' instead of use_container_width
                             st.subheader("📊 Prediction Analysis")
                             fig_conf = plot_prediction_confidence(predictions)
-                            st.plotly_chart(fig_conf, use_container_width=True)
+                            st.plotly_chart(fig_conf, width='stretch')
                             
                             # Confidence entropy
                             fig_entropy, entropy_val, norm_entropy = plot_confidence_entropy(predictions)
-                            st.plotly_chart(fig_entropy, use_container_width=True)
+                            st.plotly_chart(fig_entropy, width='stretch')
                             
                             col1, col2 = st.columns(2)
                             with col1:
@@ -570,7 +565,7 @@ def main():
                                 
                                 fig_cm = create_confusion_matrix_plot(y_true, y_pred)
                                 if fig_cm:
-                                    st.plotly_chart(fig_cm, use_container_width=True)
+                                    st.plotly_chart(fig_cm, width='stretch')
                         
             else:
                 st.error(f"Failed to load image. Status code: {response.status_code}")
