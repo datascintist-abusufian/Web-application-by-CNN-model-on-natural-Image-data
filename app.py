@@ -3,6 +3,9 @@ from PIL import Image
 import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import load_model
+from tensorflow.keras.applications import ResNet50, VGG16, MobileNetV2
+from tensorflow.keras.layers import Dense, GlobalAveragePooling2D, Dropout
+from tensorflow.keras.models import Model
 import requests
 from io import BytesIO
 import plotly.express as px
@@ -17,7 +20,6 @@ from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
 from sklearn.metrics import confusion_matrix, classification_report
 import cv2
-from scipy import ndimage
 from scipy.stats import entropy
 import warnings
 warnings.filterwarnings('ignore')
@@ -46,14 +48,6 @@ st.markdown("""
         margin: 1rem 0;
         text-align: center;
     }
-    .research-card {
-        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-        border-radius: 15px;
-        padding: 1.5rem;
-        margin: 0.5rem 0;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        border-left: 5px solid #667eea;
-    }
     .metric-card {
         background: linear-gradient(135deg, #f8f9fa, #e9ecef);
         border-radius: 15px;
@@ -66,31 +60,6 @@ st.markdown("""
     .metric-card:hover {
         transform: translateY(-5px);
         box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-    }
-    .metric-value {
-        font-size: 2rem;
-        font-weight: bold;
-        color: #00a6ed;
-    }
-    .metric-label {
-        font-size: 0.9rem;
-        color: #6c757d;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-    .stButton>button {
-        width: 100%;
-        background: linear-gradient(135deg, #667eea, #764ba2);
-        color: white;
-        border-radius: 10px;
-        padding: 0.75rem 1.5rem;
-        font-weight: bold;
-        border: none;
-        transition: all 0.3s;
-    }
-    .stButton>button:hover {
-        transform: scale(1.02);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
     }
     .prediction-high {
         padding: 1rem;
@@ -106,12 +75,19 @@ st.markdown("""
         border-left: 5px solid #dc3545;
         margin: 1rem 0;
     }
-    .info-box {
-        padding: 1rem;
-        background: #d1ecf1;
+    .stButton>button {
+        width: 100%;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
         border-radius: 10px;
-        border-left: 5px solid #17a2b8;
-        margin: 1rem 0;
+        padding: 0.75rem 1.5rem;
+        font-weight: bold;
+        border: none;
+        transition: all 0.3s;
+    }
+    .stButton>button:hover {
+        transform: scale(1.02);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
     }
     </style>
 """, unsafe_allow_html=True)
@@ -123,15 +99,7 @@ CLASS_NAMES = ["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "
 CLASS_INDICES = {name: idx for idx, name in enumerate(CLASS_NAMES)}
 COLORS = px.colors.qualitative.Set3
 
-MODEL_URLS = {
-    'CNN': "https://github.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/raw/main/cifar10_cnn.h5",
-    'ResNet50': "https://github.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/raw/main/cifar10_resnet50.h5",
-    'VGG16': "https://github.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/raw/main/cifar10_vgg16.h5",
-    'MobileNetV2': "https://github.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/raw/main/cifar10_mobilenetv2.h5"
-}
-
 BASE_IMAGE_URL = "https://raw.githubusercontent.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/main/"
-IMAGE_SIZE = 224
 
 # ============================================================================
 # SESSION STATE
@@ -144,54 +112,109 @@ def initialize_session_state():
         st.session_state.model_type = 'CNN'
     if 'prediction_history' not in st.session_state:
         st.session_state.prediction_history = []
-    if 'gradcam_available' not in st.session_state:
-        st.session_state.gradcam_available = False
-    if 'feature_extraction' not in st.session_state:
-        st.session_state.feature_extraction = None
+    if 'model_loaded' not in st.session_state:
+        st.session_state.model_loaded = False
 
 initialize_session_state()
 
 # ============================================================================
-# MODEL LOADING
+# MODEL CREATION FUNCTIONS
+# ============================================================================
+def create_cnn_model():
+    """Create a simple CNN model for CIFAR-10"""
+    from tensorflow.keras import layers, models
+    
+    model = models.Sequential([
+        layers.Conv2D(32, (3, 3), activation='relu', input_shape=(32, 32, 3)),
+        layers.MaxPooling2D((2, 2)),
+        layers.Conv2D(64, (3, 3), activation='relu'),
+        layers.MaxPooling2D((2, 2)),
+        layers.Conv2D(64, (3, 3), activation='relu'),
+        layers.Flatten(),
+        layers.Dense(64, activation='relu'),
+        layers.Dense(10, activation='softmax')
+    ])
+    
+    model.compile(optimizer='adam',
+                  loss='categorical_crossentropy',
+                  metrics=['accuracy'])
+    
+    return model
+
+def create_transfer_learning_model(base_model_class, input_shape=(32, 32, 3)):
+    """Create a transfer learning model"""
+    base_model = base_model_class(weights='imagenet', include_top=False, input_shape=input_shape)
+    base_model.trainable = False
+    
+    x = GlobalAveragePooling2D()(base_model.output)
+    x = Dense(128, activation='relu')(x)
+    x = Dropout(0.5)(x)
+    output = Dense(10, activation='softmax')(x)
+    
+    model = Model(inputs=base_model.input, outputs=output)
+    model.compile(optimizer='adam',
+                  loss='categorical_crossentropy',
+                  metrics=['accuracy'])
+    
+    return model
+
+# ============================================================================
+# MODEL LOADING WITH FALLBACK
 # ============================================================================
 @st.cache_resource
-def load_model_from_url(model_type='CNN'):
-    """Load the model from URL or local file"""
+def load_or_create_model(model_type='CNN'):
+    """Load model from file or create a new one if not available"""
     try:
-        model_url = MODEL_URLS.get(model_type, MODEL_URLS['CNN'])
-        model_name = model_url.split('/')[-1]
-        model_path = f'models/{model_name}'
+        model = None
+        model_path = f'models/cifar10_{model_type.lower()}.h5'
         
-        os.makedirs('models', exist_ok=True)
+        # Try to load from file
+        if os.path.exists(model_path):
+            try:
+                model = load_model(model_path)
+                st.success(f"✅ Model loaded from local file: {model_path}")
+                return model
+            except Exception as e:
+                st.warning(f"Could not load local model: {str(e)}")
         
-        if not os.path.exists(model_path):
-            with st.spinner(f'📥 Downloading {model_type} model... This may take a few minutes...'):
-                response = requests.get(model_url, stream=True)
-                if response.status_code == 200:
-                    total_size = int(response.headers.get('content-length', 0))
-                    progress_bar = st.progress(0)
-                    downloaded = 0
-                    
-                    with open(model_path, 'wb') as f:
-                        for chunk in response.iter_content(chunk_size=8192):
-                            f.write(chunk)
-                            downloaded += len(chunk)
-                            if total_size > 0:
-                                progress = downloaded / total_size
-                                progress_bar.progress(min(progress, 1.0))
-                    
-                    progress_bar.empty()
-                    st.success(f"✅ Model downloaded successfully!")
-                else:
-                    st.error(f"Failed to download model. Status code: {response.status_code}")
-                    return None
+        # Try to download from URL
+        url = f"https://github.com/datascintist-abusufian/Web-application-by-CNN-model-on-natural-Image-data/raw/main/cifar10_{model_type.lower()}.h5"
+        try:
+            response = requests.get(url, timeout=10)
+            if response.status_code == 200:
+                os.makedirs('models', exist_ok=True)
+                with open(model_path, 'wb') as f:
+                    f.write(response.content)
+                model = load_model(model_path)
+                st.success(f"✅ Model downloaded and loaded from: {url}")
+                return model
+        except:
+            pass
         
-        model = load_model(model_path)
-        st.session_state.model_type = model_type
+        # If no model found, create one
+        st.info(f"🔄 No pre-trained model found. Creating a new {model_type} model...")
+        
+        with st.spinner(f"Creating {model_type} model... This may take a moment..."):
+            if model_type == 'CNN':
+                model = create_cnn_model()
+            elif model_type == 'ResNet50':
+                model = create_transfer_learning_model(ResNet50, input_shape=(32, 32, 3))
+            elif model_type == 'VGG16':
+                model = create_transfer_learning_model(VGG16, input_shape=(32, 32, 3))
+            elif model_type == 'MobileNetV2':
+                model = create_transfer_learning_model(MobileNetV2, input_shape=(32, 32, 3))
+            else:
+                model = create_cnn_model()
+            
+            # Save the model
+            os.makedirs('models', exist_ok=True)
+            model.save(model_path)
+            st.success(f"✅ New {model_type} model created and saved!")
+        
         return model
         
     except Exception as e:
-        st.error(f"Error loading model: {str(e)}")
+        st.error(f"Error loading/creating model: {str(e)}")
         return None
 
 # ============================================================================
@@ -201,7 +224,7 @@ def preprocess_image(image, model_type='CNN'):
     """Preprocess image based on model type"""
     try:
         if model_type in ['ResNet50', 'VGG16', 'MobileNetV2']:
-            img_resized = image.resize((224, 224))
+            img_resized = image.resize((32, 32))
         else:
             img_resized = image.resize((32, 32))
         
@@ -209,15 +232,8 @@ def preprocess_image(image, model_type='CNN'):
         
         if model_type == 'CNN':
             img_array = img_array / 255.0
-        elif model_type == 'ResNet50':
-            from tensorflow.keras.applications.resnet50 import preprocess_input as resnet_preprocess
-            img_array = resnet_preprocess(img_array.astype(np.float32))
-        elif model_type == 'VGG16':
-            from tensorflow.keras.applications.vgg16 import preprocess_input as vgg_preprocess
-            img_array = vgg_preprocess(img_array.astype(np.float32))
-        elif model_type == 'MobileNetV2':
-            from tensorflow.keras.applications.mobilenet_v2 import preprocess_input as mobilenet_preprocess
-            img_array = mobilenet_preprocess(img_array.astype(np.float32))
+        else:
+            img_array = img_array / 255.0
         
         return np.expand_dims(img_array, axis=0)
         
@@ -304,50 +320,6 @@ def plot_confidence_entropy(predictions):
     
     return fig, entropy_value, normalized_entropy
 
-def plot_feature_space(features, labels=None, method='PCA'):
-    """Visualize feature space using PCA or t-SNE"""
-    if features is None:
-        return None
-    
-    if method == 'PCA':
-        reducer = PCA(n_components=2, random_state=42)
-        title = 'PCA Visualization of Feature Space'
-    else:
-        reducer = TSNE(n_components=2, random_state=42, perplexity=30)
-        title = 't-SNE Visualization of Feature Space'
-    
-    features_2d = reducer.fit_transform(features)
-    
-    fig = go.Figure()
-    
-    if labels is not None:
-        for i, class_name in enumerate(CLASS_NAMES):
-            mask = labels == i
-            if np.any(mask):
-                fig.add_trace(go.Scatter(
-                    x=features_2d[mask, 0],
-                    y=features_2d[mask, 1],
-                    mode='markers',
-                    name=class_name,
-                    marker=dict(size=8, opacity=0.7),
-                    text=[class_name] * np.sum(mask)
-                ))
-    else:
-        fig.add_trace(go.Scatter(
-            x=features_2d[:, 0],
-            y=features_2d[:, 1],
-            mode='markers',
-            marker=dict(size=8, color='#667eea', opacity=0.7)
-        ))
-    
-    fig.update_layout(
-        title=title,
-        height=500,
-        hovermode='closest'
-    )
-    
-    return fig
-
 def create_confusion_matrix_plot(y_true, y_pred):
     """Create confusion matrix visualization with proper error handling"""
     try:
@@ -389,7 +361,7 @@ def main():
     st.markdown("""
     <div class="gradient-header">
         <h1>🧠 Advanced CIFAR-10 Research Classifier</h1>
-        <p>Multi-Model Deep Learning Analysis for Research Applications</p>
+        <p>Deep Learning Image Classification for Research Applications</p>
     </div>
     """, unsafe_allow_html=True)
     
@@ -405,31 +377,30 @@ def main():
         )
         
         # Load model
-        if st.button("🔄 Load Model", use_container_width=True):
-            with st.spinner(f"Loading {model_type} model..."):
-                st.session_state.model = load_model_from_url(model_type)
+        if st.button("🔄 Load/Create Model", use_container_width=True):
+            with st.spinner(f"Loading/Creating {model_type} model..."):
+                st.session_state.model = load_or_create_model(model_type)
                 st.session_state.model_type = model_type
-                if st.session_state.model:
-                    st.success(f"✅ {model_type} model loaded!")
-        
-        st.markdown("---")
-        
-        # Analysis options
-        st.subheader("🔬 Analysis Options")
-        show_feature_space = st.checkbox("Show Feature Space", value=True)
-        show_confusion = st.checkbox("Show Confusion Matrix", value=False)
-        show_gradcam = st.checkbox("Enable Grad-CAM", value=False)
+                st.session_state.model_loaded = st.session_state.model is not None
+                if st.session_state.model_loaded:
+                    st.success(f"✅ {model_type} model ready!")
+                else:
+                    st.error("❌ Failed to load/create model")
         
         st.markdown("---")
         
         # Model info
         st.subheader("📊 Model Information")
-        st.info(f"""
-        **Current Model:** {st.session_state.model_type if st.session_state.model else 'Not loaded'}
-        **Classes:** 10
-        **Input Size:** {'224x224' if model_type != 'CNN' else '32x32'}
-        **Dataset:** CIFAR-10
-        """)
+        if st.session_state.model_loaded:
+            st.info(f"""
+            **Current Model:** {st.session_state.model_type}
+            **Classes:** 10
+            **Input Size:** 32x32
+            **Dataset:** CIFAR-10
+            **Status:** ✅ Loaded
+            """)
+        else:
+            st.warning("⚠️ No model loaded. Click 'Load/Create Model' to get started.")
         
         if st.session_state.prediction_history:
             st.metric("Total Predictions", len(st.session_state.prediction_history))
@@ -438,9 +409,23 @@ def main():
                 st.metric("Accuracy", f"{(correct/len(st.session_state.prediction_history))*100:.1f}%")
     
     # Check model
-    if st.session_state.model is None:
+    if not st.session_state.model_loaded or st.session_state.model is None:
         st.warning("⚠️ Please load a model from the sidebar to begin analysis.")
-        st.info("💡 Click the 'Load Model' button to download and load a pre-trained model.")
+        st.info("💡 Click the 'Load/Create Model' button to download or create a model.")
+        
+        # Show sample images anyway
+        st.subheader("📸 Sample Images (Model not loaded)")
+        cols = st.columns(4)
+        for idx, class_name in enumerate(CLASS_NAMES[:4]):
+            with cols[idx]:
+                try:
+                    image_url = f"{BASE_IMAGE_URL}cifar_image_{class_name.lower()}_1.png"
+                    response = requests.get(image_url)
+                    if response.status_code == 200:
+                        image = Image.open(BytesIO(response.content)).convert('RGB')
+                        st.image(image, caption=class_name.capitalize(), width=None)
+                except:
+                    pass
         return
     
     # Single image analysis
@@ -463,7 +448,6 @@ def main():
             if response.status_code == 200:
                 image = Image.open(BytesIO(response.content)).convert('RGB')
                 
-                # Display image - FIXED: use width instead of use_container_width
                 st.image(image, caption=f"Sample {selected_class.capitalize()} Image", width=None)
                 
                 # Upload option
@@ -476,14 +460,11 @@ def main():
                     image = Image.open(uploaded_file).convert('RGB')
                     st.image(image, caption="Uploaded Image", width=None)
                 
-                # Analyze button
                 if st.button("🔬 Analyze Image", type="primary", use_container_width=True):
                     with st.spinner("Analyzing image..."):
-                        # Preprocess
                         processed = preprocess_image(image, st.session_state.model_type)
                         
                         if processed is not None:
-                            # Predict
                             start_time = time.time()
                             predictions = st.session_state.model.predict(processed, verbose=0)
                             inference_time = time.time() - start_time
@@ -491,9 +472,7 @@ def main():
                             predicted_idx = np.argmax(predictions)
                             predicted_class = CLASS_NAMES[predicted_idx]
                             confidence = np.max(predictions)
-                            confidence_percent = confidence * 100
                             
-                            # Store history
                             st.session_state.prediction_history.append({
                                 'class': selected_class,
                                 'predicted': predicted_class,
@@ -502,7 +481,7 @@ def main():
                                 'inference_time': inference_time
                             })
                             
-                            # Display results in columns
+                            # Display results
                             col1, col2, col3 = st.columns(3)
                             
                             with col1:
@@ -523,12 +502,12 @@ def main():
                                     """, unsafe_allow_html=True)
                             
                             with col2:
-                                st.metric("Confidence", f"{confidence_percent:.1f}%")
+                                st.metric("Confidence", f"{confidence*100:.1f}%")
                             
                             with col3:
                                 st.metric("Inference Time", f"{inference_time*1000:.1f} ms")
                             
-                            # Confidence plot - FIXED: use width='stretch' instead of use_container_width
+                            # Confidence plot
                             st.subheader("📊 Prediction Analysis")
                             fig_conf = plot_prediction_confidence(predictions)
                             st.plotly_chart(fig_conf, width='stretch')
@@ -556,8 +535,8 @@ def main():
                             })
                             st.dataframe(df_top, use_container_width=True)
                             
-                            # Confusion Matrix (if enabled and we have history)
-                            if show_confusion and len(st.session_state.prediction_history) > 1:
+                            # Confusion Matrix
+                            if len(st.session_state.prediction_history) > 1:
                                 st.subheader("📊 Confusion Matrix")
                                 history_df = pd.DataFrame(st.session_state.prediction_history)
                                 y_true = [CLASS_INDICES.get(cls, 0) for cls in history_df['class']]
@@ -598,8 +577,7 @@ def main():
     st.markdown("""
     <div style='text-align: center; color: #666; padding: 1rem;'>
         <p>🧠 Advanced CIFAR-10 Research Classifier v2.0</p>
-        <p style='font-size: 0.8rem;'>For research and educational purposes | Author: Md Abu Sufian</p>
-        <p style='font-size: 0.8rem;'>Powered by TensorFlow, Streamlit, and Plotly</p>
+        <p style='font-size: 0.8rem;'>For research and educational purposes</p>
     </div>
     """, unsafe_allow_html=True)
 
