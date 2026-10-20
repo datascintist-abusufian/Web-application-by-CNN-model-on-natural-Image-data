@@ -1,0 +1,84 @@
+{
+ "created_utc": "2026-10-20T21:56:16+00:00",
+ "n_images": "5,000 (CNN) / 500 (transfer)",
+ "served_models": [
+  {
+   "model": "CNN",
+   "weights": "cifar10_cnn.h5 (trained)",
+   "architecture_matches_app_code": false,
+   "params": 167562,
+   "app_label_params": "~1.2M",
+   "preprocessing": "resize 32px, /255",
+   "n_images": 5000,
+   "accuracy": 0.6696
+  },
+  {
+   "model": "ResNet50",
+   "weights": "none \u2014 head created at random on first load",
+   "architecture_matches_app_code": true,
+   "params": 24770698,
+   "app_label_params": "~25.6M",
+   "preprocessing": "resize 224px, /255 (backbone expects preprocess_input)",
+   "n_images": 500,
+   "accuracy": 0.098,
+   "distinct_classes_predicted": 2,
+   "mean_confidence": 0.167
+  },
+  {
+   "model": "VGG16",
+   "weights": "none \u2014 head created at random on first load",
+   "architecture_matches_app_code": true,
+   "params": 15111242,
+   "app_label_params": "~14.7M",
+   "preprocessing": "resize 224px, /255 (backbone expects preprocess_input)",
+   "n_images": 500,
+   "accuracy": 0.158,
+   "distinct_classes_predicted": 3,
+   "mean_confidence": 0.1577
+  },
+  {
+   "model": "MobileNetV2",
+   "weights": "none \u2014 head created at random on first load",
+   "architecture_matches_app_code": true,
+   "params": 3047754,
+   "app_label_params": "~3.5M",
+   "preprocessing": "resize 224px, /255 (backbone expects preprocess_input)",
+   "n_images": 500,
+   "accuracy": 0.098,
+   "distinct_classes_predicted": 4,
+   "mean_confidence": 0.3846
+  }
+ ],
+ "findings": [
+  {
+   "severity": "high",
+   "title": "3 of the 4 selectable models are untrained",
+   "detail": "No cifar10_resnet50/vgg16/mobilenetv2.h5 exists in the repo, so app.py builds these models with a randomly initialised classifier head and never trains it. Measured accuracy as served: ResNet50 9.8%, VGG16 15.8%, MobileNetV2 9.8% \u2014 near chance (10%), collapsing onto only 2\u20134 distinct classes, and a fresh random head is drawn every time the app restarts. The same architectures trained in this benchmark reach ResNet50 78.6%, VGG16 74.0%, MobileNetV2 76.0%. Fix: ship trained heads (benchmark --save-weights) and load them in load_or_create_model()."
+  },
+  {
+   "severity": "high",
+   "title": "Wrong input normalisation for ImageNet backbones",
+   "detail": "preprocess_image() divides every image by 255. ResNet50/VGG16 expect caffe-style mean subtraction (0\u2013255, BGR) and MobileNetV2 expects [-1, 1]. Use each backbone's preprocess_input(), as the benchmark does."
+  },
+  {
+   "severity": "medium",
+   "title": "Served CNN \u2260 CNN described in the code",
+   "detail": "cifar10_cnn.h5 is a 2-conv/2-dense network with 167,562 parameters, not the 6-conv BatchNorm model in create_cnn_model() (~0.82M) and not the '~1.2M' shown in the sidebar. Its accuracy on the benchmark test split is 67.0% vs 67.1% for the benchmark CNN."
+  },
+  {
+   "severity": "medium",
+   "title": "Uploaded images are scored against the dropdown class",
+   "detail": "When a user uploads an image, 'Correct/Incorrect', the session accuracy and the confusion matrix still use the selected dropdown class as ground truth, so these metrics are contaminated. Mark uploads as 'unlabelled' or ask for the true label."
+  },
+  {
+   "severity": "low",
+   "title": "Session 'Research Metrics' rest on 10 fixed images",
+   "detail": "Only one sample image per class is available, so the sidebar accuracy re-scores the same images repeatedly. Use this dashboard's held-out test metrics (with CIs) for reporting."
+  },
+  {
+   "severity": "low",
+   "title": "Results disappear when the Top-k slider moves",
+   "detail": "All results render inside `if st.button(...)`; any widget change reruns the script with the button False. Store the last prediction in st.session_state and render from there."
+  }
+ ]
+}
