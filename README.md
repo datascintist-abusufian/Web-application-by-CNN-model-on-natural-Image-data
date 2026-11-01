@@ -17,6 +17,12 @@ architectures — a custom **CNN**, **ResNet50**, **VGG16** and **MobileNetV2** 
 
 ---
 
+## At a glance
+
+![Benchmark overview](docs/figures/CNN-web-app_overview.png)
+
+**Figure 1. Benchmark overview.** (a) Stratified CIFAR-10 subsets (10,000 train / 2,000 validation / 5,000 test). (b) A CNN trained from scratch and three frozen ImageNet backbones with a shared head. (c) Results from `results/`: accuracy with 95% CI, accuracy vs. CPU latency, robustness to Gaussian noise, the ResNet50 confusion matrix, calibration (ECE) and the deployed Streamlit app.
+
 ## Contents
 
 - [Features](#features)
