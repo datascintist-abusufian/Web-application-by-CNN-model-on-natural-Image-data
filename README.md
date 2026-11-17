@@ -11,6 +11,10 @@ architectures — a custom **CNN**, **ResNet50**, **VGG16** and **MobileNetV2** 
 
 **Live demo:** https://abusufian-web-application-on-natural-image-data.streamlit.app/
 
+> 🆕 **New — v3: Explainable AI & Medical Imaging edition** →
+> **[abusufian-xai-medical.streamlit.app](https://abusufian-xai-medical.streamlit.app/)** · code in
+> [`advanced-xai-medical-app/`](advanced-xai-medical-app/). See [What's new in v3](#whats-new-in-v3-explainable-ai--medical-imaging).
+
 <p align="center">
   <img src="Real_DL_architect.gif" alt="Deep learning architecture animation" width="600">
 </p>
@@ -25,6 +29,7 @@ architectures — a custom **CNN**, **ResNet50**, **VGG16** and **MobileNetV2** 
 
 ## Contents
 
+- [What's new in v3: explainable AI & medical imaging](#whats-new-in-v3-explainable-ai--medical-imaging)
 - [Features](#features)
 - [Model comparison results](#model-comparison-results)
 - [Repository structure](#repository-structure)
@@ -33,6 +38,43 @@ architectures — a custom **CNN**, **ResNet50**, **VGG16** and **MobileNetV2** 
 - [Known limitations and roadmap](#known-limitations-and-roadmap)
 - [Tech stack](#tech-stack)
 - [Author](#author)
+
+---
+
+## What's new in v3: explainable AI & medical imaging
+
+[![Streamlit App v3](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://abusufian-xai-medical.streamlit.app/)
+
+**Live app:** https://abusufian-xai-medical.streamlit.app/
+**Code:** [`advanced-xai-medical-app/`](advanced-xai-medical-app/) — a self-contained folder (code, trained
+models, pre-computed results). The original app in the repository root is kept unchanged.
+
+v3 turns the classifier into a trustworthy-AI research platform and applies the same toolkit to
+clinical images. It has three pages:
+
+| Page | What it adds |
+|---|---|
+| **Classifier** (CIFAR-10) | All four models now **trained** (ResNet50 84.1 %, MobileNetV2 84.8 %, VGG16 80.4 %, CNN 68.6 % on 5,000 test images) with correct `preprocess_input`; six explanation methods (Grad-CAM, Grad-CAM++, saliency, SmoothGrad, Integrated Gradients, occlusion) with deletion/insertion faithfulness; test-time-augmentation and MC-Dropout uncertainty (aleatoric vs epistemic); corruption and FGSM adversarial probes; 100-image labelled test gallery and batch evaluation; uploads treated as unlabelled |
+| **Model Comparison** | The existing benchmark dashboard, with a refreshed deployment audit of the served models |
+| **Medical Imaging** 🩻 | Two MedMNIST v2 tasks — **PneumoniaMNIST** (paediatric chest X-ray) and **BloodMNIST** (8 blood-cell types): clinical metrics (sensitivity, specificity, PPV, NPV with CIs, operating-point selection, prevalence adjustment), decision-curve analysis, calibration and temperature scaling, uncertainty and human–AI referral, out-of-distribution detection, robustness and quality-stratified performance, embeddings, live XAI with a parameter-randomisation sanity check, radiomics-style texture features and a dataset-shift check for uploads, and a model card |
+
+**Medical imaging results** (64×64 px, official splits, ≈0.26 M-parameter CNN per task):
+
+| Task | Test n | Accuracy | AUROC | Best OOD detector (worst-case AUROC) |
+|---|---:|---:|---:|---|
+| PneumoniaMNIST — chest X-ray, binary | 624 | 88.8 % | 0.972 | Mahalanobis (0.986) |
+| BloodMNIST — 8 cell types | 3,421 | 98.0 % | 0.999 (macro) | Mahalanobis (1.000) |
+
+Full methods, results and reproduction steps: [`advanced-xai-medical-app/README.md`](advanced-xai-medical-app/README.md).
+
+```bash
+# run v3 locally (Python 3.9–3.11)
+cd advanced-xai-medical-app
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+> Research and teaching tool — not a medical device and not validated for clinical use.
 
 ---
 
@@ -108,6 +150,13 @@ data. Full-data training, larger input sizes or fine-tuning would raise every sc
 
 ```
 .
+├── advanced-xai-medical-app/      # 🆕 v3: XAI + Medical Imaging edition (self-contained, own README)
+│   ├── app.py                     #     Classifier with XAI, uncertainty and robustness tabs
+│   ├── pages/                     #     Model Comparison + Medical Imaging pages
+│   ├── xai_utils.py, cifar_models.py
+│   ├── benchmark/                 #     incl. train_medical.py
+│   ├── results/, weights/         #     trained models and pre-computed analyses
+│   └── README.md
 ├── app.py                         # Main Streamlit page: single-image classifier
 ├── pages/
 │   └── 1_Model_Comparison.py      # Model Comparison dashboard (second page)
@@ -179,6 +228,10 @@ Trained weights go to `results/weights/`, which is git-ignored.
 ---
 
 ## Known limitations and roadmap
+
+> ✅ The items below describe the original app in the repository root. All five are **fixed in v3**
+> ([`advanced-xai-medical-app/`](advanced-xai-medical-app/), live at https://abusufian-xai-medical.streamlit.app/), which also adds Grad-CAM
+> and five further explanation methods.
 
 Found by `benchmark/audit_deployed.py` and shown in the dashboard's **Deployment audit** tab:
 
