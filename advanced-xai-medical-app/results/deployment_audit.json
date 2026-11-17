@@ -1,0 +1,86 @@
+{
+ "created_utc": "2026-11-17T10:57:45+00:00",
+ "n_images": "5,000",
+ "served_models": [
+  {
+   "model": "CNN",
+   "weights": "cifar10_cnn.h5",
+   "architecture_matches_app_code": true,
+   "params": 167562,
+   "app_label_params": "167,562 (read from the model)",
+   "preprocessing": "32\u00d732 RGB, scaled to [0, 1]",
+   "n_images": 5000,
+   "accuracy": 0.6856,
+   "distinct_classes_predicted": 10,
+   "mean_confidence": 0.7341
+  },
+  {
+   "model": "ResNet50",
+   "weights": "ImageNet backbone + resnet50_head.keras",
+   "architecture_matches_app_code": true,
+   "params": 24770698,
+   "app_label_params": "24,770,698 (read from the model)",
+   "preprocessing": "32\u00d732 \u2192 96\u00d796, ResNet50 preprocess_input",
+   "n_images": 5000,
+   "accuracy": 0.8412,
+   "distinct_classes_predicted": 10,
+   "mean_confidence": 0.8611
+  },
+  {
+   "model": "VGG16",
+   "weights": "ImageNet backbone + vgg16_head.keras",
+   "architecture_matches_app_code": true,
+   "params": 15111242,
+   "app_label_params": "15,111,242 (read from the model)",
+   "preprocessing": "32\u00d732 \u2192 96\u00d796, VGG16 preprocess_input",
+   "n_images": 5000,
+   "accuracy": 0.8044,
+   "distinct_classes_predicted": 10,
+   "mean_confidence": 0.8291
+  },
+  {
+   "model": "MobileNetV2",
+   "weights": "ImageNet backbone + mobilenetv2_head.keras",
+   "architecture_matches_app_code": true,
+   "params": 3047754,
+   "app_label_params": "3,047,754 (read from the model)",
+   "preprocessing": "32\u00d732 \u2192 96\u00d796, MobileNetV2 preprocess_input",
+   "n_images": 5000,
+   "accuracy": 0.848,
+   "distinct_classes_predicted": 10,
+   "mean_confidence": 0.8892
+  }
+ ],
+ "findings": [
+  {
+   "severity": "resolved",
+   "title": "\u2705 All four selectable models are trained",
+   "detail": "Trained classifier heads are shipped in weights/ and loaded by cifar_models.load(). Accuracy as served on the 5,000-image benchmark test split: CNN 68.6%, ResNet50 84.1%, VGG16 80.4%, MobileNetV2 84.8%. (Previously 3 of 4 models had a random, untrained head and scored 10\u201316%.) The heads were re-trained with the benchmark protocol on the official CIFAR-10 binary release; the benchmark tables on this page were produced from JPEG copies of CIFAR-10, which explains why served transfer accuracy is a few points higher."
+  },
+  {
+   "severity": "resolved",
+   "title": "\u2705 Backbone-specific preprocessing",
+   "detail": "Images are up-sampled to 96 px and passed through each backbone's own preprocess_input() inside the graph \u2014 the same protocol the heads were trained with."
+  },
+  {
+   "severity": "resolved",
+   "title": "\u2705 Model information is read from the loaded model",
+   "detail": "The sidebar shows the true parameter count (CNN: 167,562) and architecture."
+  },
+  {
+   "severity": "resolved",
+   "title": "\u2705 Uploads are unlabelled by default",
+   "detail": "Uploaded images are no longer scored against the dropdown class; a true label can optionally be given and only labelled images enter session accuracy and the confusion matrix."
+  },
+  {
+   "severity": "resolved",
+   "title": "\u2705 Results persist across widget changes",
+   "detail": "The last prediction is kept in st.session_state, so moving the Top-k slider or switching tabs no longer clears it. A 100-image labelled test gallery replaces repeated scoring of 10 images."
+  },
+  {
+   "severity": "low",
+   "title": "Remaining limitation: frozen backbones, no augmentation",
+   "detail": "Transfer models are frozen ImageNet backbones at 96 px; fine-tuning and augmentation would raise accuracy further. The CNN is a compact 2-conv network trained from scratch."
+  }
+ ]
+}
